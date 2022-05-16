@@ -42,7 +42,7 @@ bool MultiMeshRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, sizeof(mat4) };
+		const VkDescriptorBufferInfo bufferInfo  = { mUniformBuffers[i], 0, sizeof(mat4) };
 		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_, 0, maxVertexBufferSize_ };
 		const VkDescriptorBufferInfo bufferInfo3 = { storageBuffer_, maxVertexBufferSize_, maxIndexBufferSize_ };
 		const VkDescriptorBufferInfo bufferInfo4 = { drawDataBuffers_[i], 0, maxDrawDataSize_ };
@@ -76,7 +76,7 @@ void MultiMeshRenderer::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t 
 
 void MultiMeshRenderer::updateUniformBuffer(VulkanRenderDevice& vkDev, size_t currentImage, const mat4& m)
 {
-	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, glm::value_ptr(m), sizeof(mat4));
+	uploadBufferData(vkDev, mUniformBuffersMemory[currentImage], 0, glm::value_ptr(m), sizeof(mat4));
 }
 
 void MultiMeshRenderer::updateGeometryBuffers(VulkanRenderDevice& vkDev, uint32_t vertexCount, uint32_t indexCount, const void* vertices, const void* indices)

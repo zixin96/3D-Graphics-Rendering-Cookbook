@@ -49,7 +49,7 @@ bool ImGuiRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
-		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, sizeof(mat4) };
+		const VkDescriptorBufferInfo bufferInfo  = { mUniformBuffers[i], 0, sizeof(mat4) };
 		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_[i], 0, ImGuiVtxBufferSize };
 		const VkDescriptorBufferInfo bufferInfo3 = { storageBuffer_[i], ImGuiVtxBufferSize, ImGuiIdxBufferSize };
 		const VkDescriptorImageInfo  imageInfo   = { fontSampler_, font_.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
@@ -116,7 +116,7 @@ bool ImGuiRenderer::createMultiDescriptorSet(VulkanRenderDevice& vkDev)
 	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
-		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, sizeof(mat4) };
+		const VkDescriptorBufferInfo bufferInfo  = { mUniformBuffers[i], 0, sizeof(mat4) };
 		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_[i], 0, ImGuiVtxBufferSize };
 		const VkDescriptorBufferInfo bufferInfo3 = { storageBuffer_[i], ImGuiVtxBufferSize, ImGuiIdxBufferSize };
 
@@ -220,7 +220,7 @@ void ImGuiRenderer::updateBuffers(VulkanRenderDevice& vkDev, uint32_t currentIma
 
 	const mat4 inMtx = glm::ortho(L, R, T, B);
 
-	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, glm::value_ptr(inMtx), sizeof(mat4));
+	uploadBufferData(vkDev, mUniformBuffersMemory[currentImage], 0, glm::value_ptr(inMtx), sizeof(mat4));
 
 	void* data = nullptr;
 	vkMapMemory(vkDev.device, storageBufferMemory_[currentImage], 0, bufferSize_, 0, &data);
@@ -372,10 +372,10 @@ ImGuiRenderer::~ImGuiRenderer()
 {
 	for (size_t i = 0; i < swapchainFramebuffers_.size(); i++)
 	{
-		vkDestroyBuffer(device_, storageBuffer_[i], nullptr);
-		vkFreeMemory(device_, storageBufferMemory_[i], nullptr);
+		vkDestroyBuffer(mDevice, storageBuffer_[i], nullptr);
+		vkFreeMemory(mDevice, storageBufferMemory_[i], nullptr);
 	}
 
-	vkDestroySampler(device_, fontSampler_, nullptr);
-	destroyVulkanImage(device_, font_);
+	vkDestroySampler(mDevice, fontSampler_, nullptr);
+	destroyVulkanImage(mDevice, font_);
 }

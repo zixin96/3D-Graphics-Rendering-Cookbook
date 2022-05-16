@@ -25,6 +25,8 @@ vec3 faceCoordsToXYZ(int i, int j, int faceID, int faceSize)
 
 Bitmap convertEquirectangularMapToVerticalCross(const Bitmap& b)
 {
+	// TODO: Black box (come back later)
+
 	if (b.type_ != eBitmapType_2D) return Bitmap();
 
 	const int faceSize = b.w_ / 4;
@@ -85,6 +87,8 @@ Bitmap convertEquirectangularMapToVerticalCross(const Bitmap& b)
 
 Bitmap convertVerticalCrossToCubeMapFaces(const Bitmap& b)
 {
+	// TODO: Black box (come back later)
+
 	const int faceWidth = b.w_ / 3;
 	const int faceHeight = b.h_ / 4;
 

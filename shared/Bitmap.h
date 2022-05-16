@@ -43,6 +43,8 @@ struct Bitmap
 	int comp_ = 3;
 	eBitmapFormat fmt_ = eBitmapFormat_UnsignedByte;
 	eBitmapType type_ = eBitmapType_2D;
+
+	// raw bitmap data in bytes
 	std::vector<uint8_t> data_;
 
 	static int getBytesPerComponent(eBitmapFormat fmt)
@@ -83,6 +85,8 @@ private:
 
 	void setPixelFloat(int x, int y, const glm::vec4& c)
 	{
+		// TODO: Black box (come back later)
+
 		const int ofs = comp_ * (y * w_ + x);
 		float* data = reinterpret_cast<float*>(data_.data());
 		if (comp_ > 0) data[ofs + 0] = c.x;
@@ -92,6 +96,8 @@ private:
 	}
 	glm::vec4 getPixelFloat(int x, int y) const
 	{
+		// TODO: Black box (come back later)
+
 		const int ofs = comp_ * (y * w_ + x);
 		const float* data = reinterpret_cast<const float*>(data_.data());
 		return glm::vec4(

@@ -39,7 +39,7 @@ bool CubeRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo = {uniformBuffers_[i], 0, sizeof(mat4)};
+		const VkDescriptorBufferInfo bufferInfo = {mUniformBuffers[i], 0, sizeof(mat4)};
 		const VkDescriptorImageInfo imageInfo = {
 			mTextureSampler, mTexture.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
@@ -49,7 +49,10 @@ bool CubeRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 			imageWriteDescriptorSet(ds, &imageInfo, 1)
 		};
 
-		vkUpdateDescriptorSets(vkDev.device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0,
+		vkUpdateDescriptorSets(vkDev.device,
+		                       static_cast<uint32_t>(descriptorWrites.size()),
+		                       descriptorWrites.data(),
+		                       0,
 		                       nullptr);
 	}
 
@@ -62,6 +65,7 @@ void CubeRenderer::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t curre
 
 	beginRenderPass(commandBuffer, currentImage);
 
+	// emits vkCmdDraw into the Vulkan command buffer to render 12 triangles representing 6 cube faces
 	vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -69,17 +73,30 @@ void CubeRenderer::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t curre
 
 void CubeRenderer::updateUniformBuffer(VulkanRenderDevice& vkDev, uint32_t currentImage, const mat4& m)
 {
-	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, glm::value_ptr(m), sizeof(mat4));
+	// uploads the current camera matrix into a GPU buffer
+	uploadBufferData(vkDev,
+	                 mUniformBuffersMemory[currentImage],
+	                 0,
+	                 glm::value_ptr(m),
+	                 sizeof(mat4));
 }
 
 CubeRenderer::CubeRenderer(VulkanRenderDevice& vkDev, VulkanImage inDepthTexture, const char* textureFile)
 	: RendererBase(vkDev, inDepthTexture)
 {
-	// Resource loading
+	// loads a cube map texture from a file a
 	createCubeTextureImage(vkDev, textureFile, mTexture.image, mTexture.imageMemory);
+	createImageView(vkDev.device,
+	                mTexture.image,
+	                VK_FORMAT_R32G32B32A32_SFLOAT,
+	                // for color images: 
+	                VK_IMAGE_ASPECT_COLOR_BIT,
+	                &mTexture.imageView,
+	                // for cube map images
+	                VK_IMAGE_VIEW_TYPE_CUBE,
+	                6);
 
-	createImageView(vkDev.device, mTexture.image, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT,
-	                &mTexture.imageView, VK_IMAGE_VIEW_TYPE_CUBE, 6);
+	// creates a corresponding cube map sampler
 	createTextureSampler(vkDev.device, &mTextureSampler);
 
 	// Pipeline initialization
@@ -89,8 +106,13 @@ CubeRenderer::CubeRenderer(VulkanRenderDevice& vkDev, VulkanImage inDepthTexture
 		!createDescriptorPool(vkDev, 1, 0, 1, &descriptorPool_) ||
 		!createDescriptorSet(vkDev) ||
 		!createPipelineLayout(vkDev.device, descriptorSetLayout_, &pipelineLayout_) ||
-		!createGraphicsPipeline(vkDev, renderPass_, pipelineLayout_,
-		                        {"data/shaders/chapter04/VKCube.vert", "data/shaders/chapter04/VKCube.frag"},
+		!createGraphicsPipeline(vkDev,
+		                        renderPass_,
+		                        pipelineLayout_,
+		                        {
+			                        "data/shaders/chapter04/VKCube.vert",
+			                        "data/shaders/chapter04/VKCube.frag"
+		                        },
 		                        &graphicsPipeline_))
 	{
 		printf("CubeRenderer: failed to create pipeline\n");
@@ -100,6 +122,6 @@ CubeRenderer::CubeRenderer(VulkanRenderDevice& vkDev, VulkanImage inDepthTexture
 
 CubeRenderer::~CubeRenderer()
 {
-	vkDestroySampler(device_, mTextureSampler, nullptr);
-	destroyVulkanImage(device_, mTexture);
+	vkDestroySampler(mDevice, mTextureSampler, nullptr);
+	destroyVulkanImage(mDevice, mTexture);
 }

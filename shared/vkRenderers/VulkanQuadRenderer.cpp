@@ -64,7 +64,7 @@ bool VulkanQuadRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 	{
 		const VkDescriptorBufferInfo bufferInfo = {
-			.buffer = uniformBuffers_[i],
+			.buffer = mUniformBuffers[i],
 			.offset = 0,
 			.range = sizeof(ConstBuffer)
 		};

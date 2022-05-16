@@ -3,21 +3,21 @@
 
 RendererBase::~RendererBase()
 {
-	for (auto buf : uniformBuffers_)
-		vkDestroyBuffer(device_, buf, nullptr);
+	for (auto buf : mUniformBuffers)
+		vkDestroyBuffer(mDevice, buf, nullptr);
 
-	for (auto mem : uniformBuffersMemory_)
-		vkFreeMemory(device_, mem, nullptr);
+	for (auto mem : mUniformBuffersMemory)
+		vkFreeMemory(mDevice, mem, nullptr);
 
-	vkDestroyDescriptorSetLayout(device_, descriptorSetLayout_, nullptr);
-	vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
+	vkDestroyDescriptorSetLayout(mDevice, descriptorSetLayout_, nullptr);
+	vkDestroyDescriptorPool(mDevice, descriptorPool_, nullptr);
 
 	for (auto framebuffer : swapchainFramebuffers_)
-		vkDestroyFramebuffer(device_, framebuffer, nullptr);
+		vkDestroyFramebuffer(mDevice, framebuffer, nullptr);
 
-	vkDestroyRenderPass(device_, renderPass_, nullptr);
-	vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
-	vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
+	vkDestroyRenderPass(mDevice, renderPass_, nullptr);
+	vkDestroyPipelineLayout(mDevice, pipelineLayout_, nullptr);
+	vkDestroyPipeline(mDevice, graphicsPipeline_, nullptr);
 }
 
 void RendererBase::beginRenderPass(VkCommandBuffer commandBuffer, size_t currentImage)
@@ -42,11 +42,11 @@ void RendererBase::beginRenderPass(VkCommandBuffer commandBuffer, size_t current
 
 bool RendererBase::createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize)
 {
-	uniformBuffers_.resize(vkDev.swapchainImages.size());
-	uniformBuffersMemory_.resize(vkDev.swapchainImages.size());
+	mUniformBuffers.resize(vkDev.swapchainImages.size());
+	mUniformBuffersMemory.resize(vkDev.swapchainImages.size());
 	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 	{
-		if (!createUniformBuffer(vkDev, uniformBuffers_[i], uniformBuffersMemory_[i], uniformDataSize))
+		if (!createUniformBuffer(vkDev, mUniformBuffers[i], mUniformBuffersMemory[i], uniformDataSize))
 		{
 			printf("Cannot create uniform buffer\n");
 			fflush(stdout);

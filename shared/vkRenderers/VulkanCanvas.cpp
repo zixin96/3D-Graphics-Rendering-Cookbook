@@ -2,19 +2,19 @@
 #include "shared/EasyProfilerWrapper.h"
 
 VulkanCanvas::VulkanCanvas(VulkanRenderDevice& vkDev, VulkanImage depth)
-: RendererBase(vkDev, depth)
+	: RendererBase(vkDev, depth)
 {
 	const size_t imgCount = vkDev.swapchainImages.size();
 
 	storageBuffer_.resize(imgCount);
 	storageBufferMemory_.resize(imgCount);
 
-	for(size_t i = 0 ; i < imgCount ; i++)
+	for (size_t i = 0; i < imgCount; i++)
 	{
 		if (!createBuffer(vkDev.device, vkDev.physicalDevice, kMaxLinesDataSize,
-			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			storageBuffer_[i], storageBufferMemory_[i]))
+		                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                  storageBuffer_[i], storageBufferMemory_[i]))
 		{
 			printf("VaulkanCanvas: createBuffer() failed\n");
 			exit(EXIT_FAILURE);
@@ -27,7 +27,10 @@ VulkanCanvas::VulkanCanvas(VulkanRenderDevice& vkDev, VulkanImage depth)
 		!createDescriptorPool(vkDev, 1, 1, 0, &descriptorPool_) ||
 		!createDescriptorSet(vkDev) ||
 		!createPipelineLayout(vkDev.device, descriptorSetLayout_, &pipelineLayout_) ||
-		!createGraphicsPipeline(vkDev, renderPass_, pipelineLayout_, { "data/shaders/chapter04/Lines.vert", "data/shaders/chapter04/Lines.frag" }, &graphicsPipeline_, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, (depth.image != VK_NULL_HANDLE), true ))
+		!createGraphicsPipeline(vkDev, renderPass_, pipelineLayout_,
+		                        {"data/shaders/chapter04/Lines.vert", "data/shaders/chapter04/Lines.frag"},
+		                        &graphicsPipeline_, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, (depth.image != VK_NULL_HANDLE),
+		                        true))
 	{
 		printf("VulkanCanvas: failed to create pipeline\n");
 		exit(EXIT_FAILURE);
@@ -38,8 +41,8 @@ VulkanCanvas::~VulkanCanvas()
 {
 	for (size_t i = 0; i < swapchainFramebuffers_.size(); i++)
 	{
-		vkDestroyBuffer(device_, storageBuffer_[i], nullptr);
-		vkFreeMemory(device_, storageBufferMemory_[i], nullptr);
+		vkDestroyBuffer(mDevice, storageBuffer_[i], nullptr);
+		vkFreeMemory(mDevice, storageBufferMemory_[i], nullptr);
 	}
 }
 
@@ -88,28 +91,30 @@ bool VulkanCanvas::createDescriptorSet(VulkanRenderDevice& vkDev)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, sizeof(UniformBuffer) };
-		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_[i], 0, kMaxLinesDataSize };
+		const VkDescriptorBufferInfo bufferInfo = {mUniformBuffers[i], 0, sizeof(UniformBuffer)};
+		const VkDescriptorBufferInfo bufferInfo2 = {storageBuffer_[i], 0, kMaxLinesDataSize};
 
 		const std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
-			bufferWriteDescriptorSet(ds, &bufferInfo,	0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
+			bufferWriteDescriptorSet(ds, &bufferInfo, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
 			bufferWriteDescriptorSet(ds, &bufferInfo2, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
 		};
 
-		vkUpdateDescriptorSets(vkDev.device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(vkDev.device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0,
+		                       nullptr);
 	}
 
 	return true;
 }
 
-void VulkanCanvas::updateUniformBuffer(VulkanRenderDevice& vkDev, const glm::mat4& modelViewProj, float time, uint32_t currentImage)
+void VulkanCanvas::updateUniformBuffer(VulkanRenderDevice& vkDev, const glm::mat4& modelViewProj, float time,
+                                       uint32_t currentImage)
 {
 	const UniformBuffer ubo = {
 		.mvp = modelViewProj,
 		.time = time
 	};
 
-	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, &ubo, sizeof(ubo));
+	uploadBufferData(vkDev, mUniformBuffersMemory[currentImage], 0, &ubo, sizeof(ubo));
 }
 
 void VulkanCanvas::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t currentImage)
@@ -121,8 +126,8 @@ void VulkanCanvas::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t curre
 
 	beginRenderPass(commandBuffer, currentImage);
 
-	vkCmdDraw( commandBuffer, static_cast<uint32_t>(lines_.size()), 1, 0, 0 );
-	vkCmdEndRenderPass( commandBuffer );
+	vkCmdDraw(commandBuffer, static_cast<uint32_t>(lines_.size()), 1, 0, 0);
+	vkCmdEndRenderPass(commandBuffer);
 }
 
 void VulkanCanvas::clear()
@@ -132,25 +137,35 @@ void VulkanCanvas::clear()
 
 void VulkanCanvas::line(const vec3& p1, const vec3& p2, const vec4& c)
 {
-	lines_.push_back( { .position = p1, .color = c } );
-	lines_.push_back( { .position = p2, .color = c } );
+	lines_.push_back({.position = p1, .color = c});
+	lines_.push_back({.position = p2, .color = c});
 }
 
-void VulkanCanvas::plane3d(const vec3& o, const vec3& v1, const vec3& v2, int n1, int n2, float s1, float s2, const vec4& color, const vec4& outlineColor)
+void VulkanCanvas::plane3d(const vec3& o,
+                           const vec3& v1,
+                           const vec3& v2,
+                           int n1,
+                           int n2,
+                           float s1,
+                           float s2,
+                           const vec4& color,
+                           const vec4& outlineColor)
 {
+	//  create the 3D representation of a plane spanned by the v1and v2 vectors
+
+	// Draw the four outer lines representing a plane segment
 	line(o - s1 / 2.0f * v1 - s2 / 2.0f * v2, o - s1 / 2.0f * v1 + s2 / 2.0f * v2, outlineColor);
 	line(o + s1 / 2.0f * v1 - s2 / 2.0f * v2, o + s1 / 2.0f * v1 + s2 / 2.0f * v2, outlineColor);
-
 	line(o - s1 / 2.0f * v1 + s2 / 2.0f * v2, o + s1 / 2.0f * v1 + s2 / 2.0f * v2, outlineColor);
 	line(o - s1 / 2.0f * v1 - s2 / 2.0f * v2, o + s1 / 2.0f * v1 - s2 / 2.0f * v2, outlineColor);
 
+	// Draw n1 "horizontal" lines and n2 "vertical" lines
 	for (int i = 1; i < n1; i++)
 	{
 		float t = ((float)i - (float)n1 / 2.0f) * s1 / (float)n1;
 		const vec3 o1 = o + t * v1;
 		line(o1 - s2 / 2.0f * v2, o1 + s2 / 2.0f * v2, color);
 	}
-
 	for (int i = 1; i < n2; i++)
 	{
 		const float t = ((float)i - (float)n2 / 2.0f) * s2 / (float)n2;

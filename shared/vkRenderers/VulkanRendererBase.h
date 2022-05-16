@@ -6,7 +6,7 @@ class RendererBase
 {
 public:
 	explicit RendererBase(const VulkanRenderDevice& vkDev, VulkanImage depthTexture)
-	: device_(vkDev.device)
+	: mDevice(vkDev.device)
 	, framebufferWidth_(vkDev.framebufferWidth)
 	, framebufferHeight_(vkDev.framebufferHeight)
 	, depthTexture_(depthTexture)
@@ -20,7 +20,7 @@ protected:
 	void beginRenderPass(VkCommandBuffer commandBuffer, size_t currentImage);
 	bool createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize);
 
-	VkDevice device_ = nullptr;
+	VkDevice mDevice = nullptr;
 
 	uint32_t framebufferWidth_ = 0;
 	uint32_t framebufferHeight_ = 0;
@@ -42,6 +42,6 @@ protected:
 	VkPipeline graphicsPipeline_ = nullptr;
 
 	// 5. Uniform buffer
-	std::vector<VkBuffer> uniformBuffers_;
-	std::vector<VkDeviceMemory> uniformBuffersMemory_;
+	std::vector<VkBuffer> mUniformBuffers;
+	std::vector<VkDeviceMemory> mUniformBuffersMemory;
 };

@@ -54,11 +54,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback
 (
-	VkDebugReportFlagsEXT      flags,
+	VkDebugReportFlagsEXT flags,
 	VkDebugReportObjectTypeEXT objectType,
-	uint64_t                   object,
-	size_t                     location,
-	int32_t                    messageCode,
+	uint64_t object,
+	size_t location,
+	int32_t messageCode,
 	const char* pLayerPrefix,
 	const char* pMessage,
 	void* UserData
@@ -73,18 +73,19 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback
 	return VK_FALSE;
 }
 
-bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback)
+bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger,
+                         VkDebugReportCallbackEXT* reportCallback)
 {
 	{
 		const VkDebugUtilsMessengerCreateInfoEXT ci = {
 			.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
 			.messageSeverity =
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
 			.messageType =
-				VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
 			.pfnUserCallback = &VulkanDebugCallback,
 			.pUserData = nullptr
 		};
@@ -96,10 +97,10 @@ bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenge
 			.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
 			.pNext = nullptr,
 			.flags =
-				VK_DEBUG_REPORT_WARNING_BIT_EXT |
-				VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-				VK_DEBUG_REPORT_ERROR_BIT_EXT |
-				VK_DEBUG_REPORT_DEBUG_BIT_EXT,
+			VK_DEBUG_REPORT_WARNING_BIT_EXT |
+			VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+			VK_DEBUG_REPORT_ERROR_BIT_EXT |
+			VK_DEBUG_REPORT_DEBUG_BIT_EXT,
 			.pfnCallback = &VulkanDebugReportCallback,
 			.pUserData = nullptr
 		};
@@ -112,20 +113,20 @@ bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenge
 
 VkShaderStageFlagBits glslangShaderStageToVulkan(glslang_stage_t sh)
 {
-	switch(sh)
+	switch (sh)
 	{
-		case GLSLANG_STAGE_VERTEX:
-			return VK_SHADER_STAGE_VERTEX_BIT;
-		case GLSLANG_STAGE_FRAGMENT:
-			return VK_SHADER_STAGE_FRAGMENT_BIT;
-		case GLSLANG_STAGE_GEOMETRY:
-			return VK_SHADER_STAGE_GEOMETRY_BIT;
-		case GLSLANG_STAGE_TESSCONTROL:
-			return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-		case GLSLANG_STAGE_TESSEVALUATION:
-			return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-		case GLSLANG_STAGE_COMPUTE:
-			return VK_SHADER_STAGE_COMPUTE_BIT;
+	case GLSLANG_STAGE_VERTEX:
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	case GLSLANG_STAGE_FRAGMENT:
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case GLSLANG_STAGE_GEOMETRY:
+		return VK_SHADER_STAGE_GEOMETRY_BIT;
+	case GLSLANG_STAGE_TESSCONTROL:
+		return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+	case GLSLANG_STAGE_TESSEVALUATION:
+		return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+	case GLSLANG_STAGE_COMPUTE:
+		return VK_SHADER_STAGE_COMPUTE_BIT;
 	}
 
 	return VK_SHADER_STAGE_VERTEX_BIT;
@@ -268,8 +269,7 @@ void createInstance(VkInstance* instance)
 #if defined (__linux__)
 		"VK_KHR_xcb_surface"
 #endif
-		, VK_EXT_DEBUG_UTILS_EXTENSION_NAME
-		, VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+		, VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 		/* for indexed textures */
 		, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
 	};
@@ -302,7 +302,8 @@ void createInstance(VkInstance* instance)
 	volkLoadInstance(*instance);
 }
 
-VkResult createDevice(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures deviceFeatures, uint32_t graphicsFamily, VkDevice* device)
+VkResult createDevice(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures deviceFeatures, uint32_t graphicsFamily,
+                      VkDevice* device)
 {
 	const std::vector<const char*> extensions =
 	{
@@ -338,7 +339,8 @@ VkResult createDevice(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures 
 	return vkCreateDevice(physicalDevice, &ci, nullptr, device);
 }
 
-VkResult createDeviceWithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures deviceFeatures, uint32_t graphicsFamily, uint32_t computeFamily, VkDevice* device)
+VkResult createDeviceWithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures deviceFeatures,
+                                 uint32_t graphicsFamily, uint32_t computeFamily, VkDevice* device)
 {
 	const std::vector<const char*> extensions =
 	{
@@ -348,7 +350,7 @@ VkResult createDeviceWithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDevi
 	if (graphicsFamily == computeFamily)
 		return createDevice(physicalDevice, deviceFeatures, graphicsFamily, device);
 
-	const float queuePriorities[2] = { 0.f, 0.f };
+	const float queuePriorities[2] = {0.f, 0.f};
 	const VkDeviceQueueCreateInfo qciGfx =
 	{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -369,7 +371,7 @@ VkResult createDeviceWithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDevi
 		.pQueuePriorities = &queuePriorities[1]
 	};
 
-	const VkDeviceQueueCreateInfo qci[2] = { qciGfx, qciComp };
+	const VkDeviceQueueCreateInfo qci[2] = {qciGfx, qciComp};
 
 	const VkDeviceCreateInfo ci =
 	{
@@ -388,7 +390,8 @@ VkResult createDeviceWithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDevi
 	return vkCreateDevice(physicalDevice, &ci, nullptr, device);
 }
 
-VkResult createDevice2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2 deviceFeatures2, uint32_t graphicsFamily, VkDevice* device)
+VkResult createDevice2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2 deviceFeatures2,
+                       uint32_t graphicsFamily, VkDevice* device)
 {
 	const std::vector<const char*> extensions =
 	{
@@ -428,7 +431,8 @@ VkResult createDevice2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures
 	return vkCreateDevice(physicalDevice, &ci, nullptr, device);
 }
 
-VkResult createDevice2WithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2 deviceFeatures2, uint32_t graphicsFamily, uint32_t computeFamily, VkDevice* device)
+VkResult createDevice2WithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2 deviceFeatures2,
+                                  uint32_t graphicsFamily, uint32_t computeFamily, VkDevice* device)
 {
 	const std::vector<const char*> extensions =
 	{
@@ -442,7 +446,7 @@ VkResult createDevice2WithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDev
 	if (graphicsFamily == computeFamily)
 		return createDevice2(physicalDevice, deviceFeatures2, graphicsFamily, device);
 
-	const float queuePriorities[2] = { 0.f, 0.f };
+	const float queuePriorities[2] = {0.f, 0.f};
 	const VkDeviceQueueCreateInfo qciGfx =
 	{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -463,7 +467,7 @@ VkResult createDevice2WithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDev
 		.pQueuePriorities = &queuePriorities[1]
 	};
 
-	const VkDeviceQueueCreateInfo qci[2] = { qciGfx, qciComp };
+	const VkDeviceQueueCreateInfo qci[2] = {qciGfx, qciComp};
 
 	const VkDeviceCreateInfo ci =
 	{
@@ -482,7 +486,9 @@ VkResult createDevice2WithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDev
 	return vkCreateDevice(physicalDevice, &ci, nullptr, device);
 }
 
-VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t graphicsFamily, uint32_t width, uint32_t height, VkSwapchainKHR* swapchain, bool supportScreenshots)
+VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
+                         uint32_t graphicsFamily, uint32_t width, uint32_t height, VkSwapchainKHR* swapchain,
+                         bool supportScreenshots)
 {
 	auto swapchainSupport = querySwapchainSupport(physicalDevice, surface);
 	auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats);
@@ -496,9 +502,11 @@ VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, VkSur
 		.minImageCount = chooseSwapImageCount(swapchainSupport.capabilities),
 		.imageFormat = surfaceFormat.format,
 		.imageColorSpace = surfaceFormat.colorSpace,
-		.imageExtent = {.width = width, .height = height },
+		.imageExtent = {.width = width, .height = height},
 		.imageArrayLayers = 1,
-		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | (supportScreenshots ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0u),
+		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | (supportScreenshots
+			? VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+			: 0u),
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.queueFamilyIndexCount = 1,
 		.pQueueFamilyIndices = &graphicsFamily,
@@ -526,7 +534,8 @@ size_t createSwapchainImages(
 	VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, swapchainImages.data()));
 
 	for (unsigned i = 0; i < imageCount; i++)
-		if (!createImageView(device, swapchainImages[i], VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, &swapchainImageViews[i]))
+		if (!createImageView(device, swapchainImages[i], VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT,
+		                     &swapchainImageViews[i]))
 			exit(0);
 
 	return static_cast<size_t>(imageCount);
@@ -542,7 +551,8 @@ VkResult createSemaphore(VkDevice device, VkSemaphore* outSemaphore)
 	return vkCreateSemaphore(device, &ci, nullptr, outSemaphore);
 }
 
-bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height, std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures deviceFeatures)
+bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
+                            std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures deviceFeatures)
 {
 	vkDev.framebufferWidth = width;
 	vkDev.framebufferHeight = height;
@@ -560,8 +570,11 @@ bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint3
 	if (!presentSupported)
 		exit(EXIT_FAILURE);
 
-	VK_CHECK(createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.swapchain));
-	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages, vkDev.swapchainImageViews);
+	VK_CHECK(
+		createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.
+			swapchain));
+	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages,
+	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
 	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
@@ -588,6 +601,7 @@ bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint3
 	VK_CHECK(vkAllocateCommandBuffers(vkDev.device, &ai, &vkDev.commandBuffers[0]));
 	return true;
 }
+
 /*
 VkResult vkGetBestComputeQueue(VkPhysicalDevice physicalDevice, uint32_t* queueFamilyIndex)
 {
@@ -624,7 +638,8 @@ VkResult vkGetBestComputeQueue(VkPhysicalDevice physicalDevice, uint32_t* queueF
 	return VK_ERROR_INITIALIZATION_FAILED;
 }
 */
-bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height, VkPhysicalDeviceFeatures deviceFeatures)
+bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
+                                       VkPhysicalDeviceFeatures deviceFeatures)
 {
 	vkDev.framebufferWidth = width;
 	vkDev.framebufferHeight = height;
@@ -632,8 +647,10 @@ bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& v
 	VK_CHECK(findSuitablePhysicalDevice(vk.instance, &isDeviceSuitable, &vkDev.physicalDevice));
 	vkDev.graphicsFamily = findQueueFamilies(vkDev.physicalDevice, VK_QUEUE_GRAPHICS_BIT);
 	vkDev.computeFamily = findQueueFamilies(vkDev.physicalDevice, VK_QUEUE_COMPUTE_BIT);
-//	VK_CHECK(vkGetBestComputeQueue(vkDev.physicalDevice, &vkDev.computeFamily));
-	VK_CHECK(createDeviceWithCompute(vkDev.physicalDevice, deviceFeatures, vkDev.graphicsFamily, vkDev.computeFamily, &vkDev.device));
+	//	VK_CHECK(vkGetBestComputeQueue(vkDev.physicalDevice, &vkDev.computeFamily));
+	VK_CHECK(
+		createDeviceWithCompute(vkDev.physicalDevice, deviceFeatures, vkDev.graphicsFamily, vkDev.computeFamily, &vkDev.
+			device));
 
 	vkDev.deviceQueueIndices.push_back(vkDev.graphicsFamily);
 	if (vkDev.graphicsFamily != vkDev.computeFamily)
@@ -652,8 +669,11 @@ bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& v
 	if (!presentSupported)
 		exit(EXIT_FAILURE);
 
-	VK_CHECK(createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.swapchain));
-	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages, vkDev.swapchainImageViews);
+	VK_CHECK(
+		createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.
+			swapchain));
+	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages,
+	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
 	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
@@ -685,7 +705,8 @@ bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& v
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.pNext = nullptr,
-			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, /* Allow command from this pool buffers to be reset*/
+			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+			/* Allow command from this pool buffers to be reset*/
 			.queueFamilyIndex = vkDev.computeFamily
 		};
 		VK_CHECK(vkCreateCommandPool(vkDev.device, &cpi1, nullptr, &vkDev.computeCommandPool));
@@ -707,7 +728,8 @@ bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& v
 	return true;
 }
 
-bool initVulkanRenderDevice2(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height, std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures2 deviceFeatures2)
+bool initVulkanRenderDevice2(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
+                             std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures2 deviceFeatures2)
 {
 	vkDev.framebufferWidth = width;
 	vkDev.framebufferHeight = height;
@@ -725,8 +747,11 @@ bool initVulkanRenderDevice2(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint
 	if (!presentSupported)
 		exit(EXIT_FAILURE);
 
-	VK_CHECK(createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.swapchain));
-	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages, vkDev.swapchainImageViews);
+	VK_CHECK(
+		createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.
+			swapchain));
+	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages,
+	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
 	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
@@ -754,17 +779,21 @@ bool initVulkanRenderDevice2(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint
 	return true;
 }
 
-bool initVulkanRenderDevice2WithCompute(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height, std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures2 deviceFeatures2, bool supportScreenshots)
+bool initVulkanRenderDevice2WithCompute(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
+                                        std::function<bool(VkPhysicalDevice)> selector,
+                                        VkPhysicalDeviceFeatures2 deviceFeatures2, bool supportScreenshots)
 {
 	vkDev.framebufferWidth = width;
 	vkDev.framebufferHeight = height;
 
 	VK_CHECK(findSuitablePhysicalDevice(vk.instance, selector, &vkDev.physicalDevice));
 	vkDev.graphicsFamily = findQueueFamilies(vkDev.physicalDevice, VK_QUEUE_GRAPHICS_BIT);
-//	VK_CHECK(createDevice2(vkDev.physicalDevice, deviceFeatures2, vkDev.graphicsFamily, &vkDev.device));
-//	VK_CHECK(vkGetBestComputeQueue(vkDev.physicalDevice, &vkDev.computeFamily));
+	//	VK_CHECK(createDevice2(vkDev.physicalDevice, deviceFeatures2, vkDev.graphicsFamily, &vkDev.device));
+	//	VK_CHECK(vkGetBestComputeQueue(vkDev.physicalDevice, &vkDev.computeFamily));
 	vkDev.computeFamily = findQueueFamilies(vkDev.physicalDevice, VK_QUEUE_COMPUTE_BIT);
-	VK_CHECK(createDevice2WithCompute(vkDev.physicalDevice, deviceFeatures2, vkDev.graphicsFamily, vkDev.computeFamily, &vkDev.device));
+	VK_CHECK(
+		createDevice2WithCompute(vkDev.physicalDevice, deviceFeatures2, vkDev.graphicsFamily, vkDev.computeFamily, &
+			vkDev.device));
 
 	vkGetDeviceQueue(vkDev.device, vkDev.graphicsFamily, 0, &vkDev.graphicsQueue);
 	if (vkDev.graphicsQueue == nullptr)
@@ -779,8 +808,11 @@ bool initVulkanRenderDevice2WithCompute(VulkanInstance& vk, VulkanRenderDevice& 
 	if (!presentSupported)
 		exit(EXIT_FAILURE);
 
-	VK_CHECK(createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.swapchain, supportScreenshots));
-	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages, vkDev.swapchainImageViews);
+	VK_CHECK(
+		createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.
+			swapchain, supportScreenshots));
+	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages,
+	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
 	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
@@ -812,7 +844,8 @@ bool initVulkanRenderDevice2WithCompute(VulkanInstance& vk, VulkanRenderDevice& 
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.pNext = nullptr,
-			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, /* Allow command from this pool buffers to be reset*/
+			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+			/* Allow command from this pool buffers to be reset*/
 			.queueFamilyIndex = vkDev.computeFamily
 		};
 		VK_CHECK(vkCreateCommandPool(vkDev.device, &cpi1, nullptr, &vkDev.computeCommandPool));
@@ -835,7 +868,8 @@ bool initVulkanRenderDevice2WithCompute(VulkanInstance& vk, VulkanRenderDevice& 
 }
 
 /* Combined initialization: all required rendering extensions for chapters 6,7,8,9 etc. with compute queue */
-bool initVulkanRenderDevice3(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height, const VulkanContextFeatures& ctxFeatures)
+bool initVulkanRenderDevice3(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
+                             const VulkanContextFeatures& ctxFeatures)
 {
 	VkPhysicalDeviceDescriptorIndexingFeaturesEXT physicalDeviceDescriptorIndexingFeatures = {
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
@@ -858,16 +892,17 @@ bool initVulkanRenderDevice3(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint
 		/* for arrays of textures */
 		.shaderSampledImageArrayDynamicIndexing = VK_TRUE,
 		/* for GL <-> VK material shader compatibility */
-		.shaderInt64 =  VK_TRUE,
+		.shaderInt64 = VK_TRUE,
 	};
 
 	VkPhysicalDeviceFeatures2 deviceFeatures2 = {
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 		.pNext = &physicalDeviceDescriptorIndexingFeatures,
-		.features = deviceFeatures  /*  */
+		.features = deviceFeatures /*  */
 	};
 
-	return initVulkanRenderDevice2WithCompute(vk, vkDev, width, height, isDeviceSuitable, deviceFeatures2, ctxFeatures.supportScreenshots_);
+	return initVulkanRenderDevice2WithCompute(vk, vkDev, width, height, isDeviceSuitable, deviceFeatures2,
+	                                          ctxFeatures.supportScreenshots_);
 }
 
 void destroyVulkanRenderDevice(VulkanRenderDevice& vkDev)
@@ -900,7 +935,11 @@ void destroyVulkanInstance(VulkanInstance& vk)
 	vkDestroyInstance(vk.instance, nullptr);
 }
 
-bool createTextureSampler(VkDevice device, VkSampler* sampler, VkFilter minFilter, VkFilter maxFilter, VkSamplerAddressMode addressMode)
+bool createTextureSampler(VkDevice device,
+                          VkSampler* sampler,
+                          VkFilter minFilter,
+                          VkFilter maxFilter,
+                          VkSamplerAddressMode addressMode)
 {
 	const VkSamplerCreateInfo samplerInfo = {
 		.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -926,20 +965,27 @@ bool createTextureSampler(VkDevice device, VkSampler* sampler, VkFilter minFilte
 	return (vkCreateSampler(device, &samplerInfo, nullptr, sampler) == VK_SUCCESS);
 }
 
-bool createDescriptorPool(VulkanRenderDevice& vkDev, uint32_t uniformBufferCount, uint32_t storageBufferCount, uint32_t samplerCount, VkDescriptorPool* descriptorPool)
+bool createDescriptorPool(VulkanRenderDevice& vkDev, uint32_t uniformBufferCount, uint32_t storageBufferCount,
+                          uint32_t samplerCount, VkDescriptorPool* descriptorPool)
 {
 	const uint32_t imageCount = static_cast<uint32_t>(vkDev.swapchainImages.size());
 
 	std::vector<VkDescriptorPoolSize> poolSizes;
 
 	if (uniformBufferCount)
-		poolSizes.push_back(VkDescriptorPoolSize{ .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, .descriptorCount = imageCount * uniformBufferCount });
+		poolSizes.push_back(VkDescriptorPoolSize{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, .descriptorCount = imageCount * uniformBufferCount
+		});
 
 	if (storageBufferCount)
-		poolSizes.push_back(VkDescriptorPoolSize{ .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = imageCount * storageBufferCount });
+		poolSizes.push_back(VkDescriptorPoolSize{
+			.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = imageCount * storageBufferCount
+		});
 
 	if (samplerCount)
-		poolSizes.push_back(VkDescriptorPoolSize{ .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = imageCount * samplerCount });
+		poolSizes.push_back(VkDescriptorPoolSize{
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = imageCount * samplerCount
+		});
 
 	const VkDescriptorPoolCreateInfo poolInfo = {
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -996,7 +1042,7 @@ SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurface
 
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-	return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+	return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 }
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
@@ -1018,7 +1064,8 @@ uint32_t chooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities)
 	return imageCountExceeded ? capabilities.maxImageCount : imageCount;
 }
 
-VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDevice* physicalDevice)
+VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<bool(VkPhysicalDevice)> selector,
+                                    VkPhysicalDevice* physicalDevice)
 {
 	uint32_t deviceCount = 0;
 	VK_CHECK_RET(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
@@ -1055,15 +1102,20 @@ uint32_t findQueueFamilies(VkPhysicalDevice device, VkQueueFlags desiredFlags)
 	return 0;
 }
 
-VkFormat findSupportedFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
-	for (VkFormat format : candidates) {
+VkFormat findSupportedFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+                             VkFormatFeatureFlags features)
+{
+	for (VkFormat format : candidates)
+	{
 		VkFormatProperties props;
 		vkGetPhysicalDeviceFormatProperties(device, format, &props);
 
-		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+		{
 			return format;
 		}
-		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+		{
 			return format;
 		}
 	}
@@ -1077,8 +1129,10 @@ uint32_t findMemoryType(VkPhysicalDevice device, uint32_t typeFilter, VkMemoryPr
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(device, &memProperties);
 
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		{
 			return i;
 		}
 	}
@@ -1090,13 +1144,14 @@ VkFormat findDepthFormat(VkPhysicalDevice device)
 {
 	return findSupportedFormat(
 		device,
-		{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+		{VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
 		VK_IMAGE_TILING_OPTIMAL,
 		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
 	);
 }
 
-bool hasStencilComponent(VkFormat format) {
+bool hasStencilComponent(VkFormat format)
+{
 	return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
@@ -1119,7 +1174,7 @@ bool createGraphicsPipeline(
 	shaderStages.resize(shaderFiles.size());
 	shaderModules.resize(shaderFiles.size());
 
-	for (size_t i = 0 ; i < shaderFiles.size() ; i++)
+	for (size_t i = 0; i < shaderFiles.size(); i++)
 	{
 		const char* file = shaderFiles[i];
 		VK_CHECK(createShaderModule(vkDev.device, &shaderModules[i], file));
@@ -1150,8 +1205,11 @@ bool createGraphicsPipeline(
 	};
 
 	const VkRect2D scissor = {
-		.offset = { 0, 0 },
-		.extent = { customWidth > 0 ? customWidth : vkDev.framebufferWidth, customHeight > 0 ? customHeight : vkDev.framebufferHeight }
+		.offset = {0, 0},
+		.extent = {
+			customWidth > 0 ? customWidth : vkDev.framebufferWidth,
+			customHeight > 0 ? customHeight : vkDev.framebufferHeight
+		}
 	};
 
 	const VkPipelineViewportStateCreateInfo viewportState = {
@@ -1185,7 +1243,8 @@ bool createGraphicsPipeline(
 		.srcAlphaBlendFactor = useBlending ? VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : VK_BLEND_FACTOR_ONE,
 		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
 		.alphaBlendOp = VK_BLEND_OP_ADD,
-		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+		VK_COLOR_COMPONENT_A_BIT
 	};
 
 	const VkPipelineColorBlendStateCreateInfo colorBlending = {
@@ -1194,7 +1253,7 @@ bool createGraphicsPipeline(
 		.logicOp = VK_LOGIC_OP_COPY,
 		.attachmentCount = 1,
 		.pAttachments = &colorBlendAttachment,
-		.blendConstants = { 0.0f, 0.0f, 0.0f, 0.0f }
+		.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}
 	};
 
 	const VkPipelineDepthStencilStateCreateInfo depthStencil = {
@@ -1246,13 +1305,14 @@ bool createGraphicsPipeline(
 
 	VK_CHECK(vkCreateGraphicsPipelines(vkDev.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, pipeline));
 
-	for (auto m: shaderModules)
+	for (auto m : shaderModules)
 		vkDestroyShaderModule(vkDev.device, m.shaderModule, nullptr);
 
 	return true;
 }
 
-bool createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+bool createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage,
+                  VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
 	const VkBufferCreateInfo bufferInfo = {
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -1284,7 +1344,8 @@ bool createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize
 	return true;
 }
 
-bool createSharedBuffer(VulkanRenderDevice& vkDev, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+bool createSharedBuffer(VulkanRenderDevice& vkDev, VkDeviceSize size, VkBufferUsageFlags usage,
+                        VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
 	uint32_t familyCount = static_cast<uint32_t>(vkDev.deviceQueueIndices.size());
 
@@ -1321,43 +1382,65 @@ bool createSharedBuffer(VulkanRenderDevice& vkDev, VkDeviceSize size, VkBufferUs
 	return true;
 }
 
-bool createUniformBuffer(VulkanRenderDevice& vkDev, VkBuffer& buffer, VkDeviceMemory& bufferMemory, VkDeviceSize bufferSize)
+bool createUniformBuffer(VulkanRenderDevice& vkDev, VkBuffer& buffer, VkDeviceMemory& bufferMemory,
+                         VkDeviceSize bufferSize)
 {
 	return createBuffer(vkDev.device, vkDev.physicalDevice, bufferSize,
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		buffer, bufferMemory);
+	                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                    buffer, bufferMemory);
 }
 
-void uploadBufferData(VulkanRenderDevice& vkDev, const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset, const void* data, const size_t dataSize)
+void uploadBufferData(VulkanRenderDevice& vkDev, const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset,
+                      const void* data, const size_t dataSize)
 {
 	EASY_FUNCTION();
 
 	void* mappedData = nullptr;
 	vkMapMemory(vkDev.device, bufferMemory, deviceOffset, dataSize, 0, &mappedData);
-		memcpy(mappedData, data, dataSize);
+	memcpy(mappedData, data, dataSize);
 	vkUnmapMemory(vkDev.device, bufferMemory);
 }
 
-void downloadBufferData(VulkanRenderDevice& vkDev, const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset, void* outData, const size_t dataSize)
+void downloadBufferData(VulkanRenderDevice& vkDev, const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset,
+                        void* outData, const size_t dataSize)
 {
 	void* mappedData = nullptr;
 	vkMapMemory(vkDev.device, bufferMemory, deviceOffset, dataSize, 0, &mappedData);
-		memcpy(outData, mappedData, dataSize);
+	memcpy(outData, mappedData, dataSize);
 	vkUnmapMemory(vkDev.device, bufferMemory);
 }
 
-bool createImage(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory, VkImageCreateFlags flags, uint32_t mipLevels) {
+bool createImage(VkDevice device,
+                 VkPhysicalDevice physicalDevice,
+                 uint32_t width,
+                 uint32_t height,
+                 VkFormat format,
+                 VkImageTiling tiling,
+                 VkImageUsageFlags usage,
+                 VkMemoryPropertyFlags properties,
+                 VkImage& image,
+                 VkDeviceMemory& imageMemory,
+                 VkImageCreateFlags flags,
+                 uint32_t mipLevels)
+{
 	const VkImageCreateInfo imageInfo = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.pNext = nullptr,
+		// selection of VkImageCreateFlagBits: e.g. VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT for cube map
+		// Observation: it seems that non-cubemap images has 0 flag
 		.flags = flags,
+		// specifies the type (the dimensionality of the image) of image that you want to create
 		.imageType = VK_IMAGE_TYPE_2D,
+		// one of VkFormat: e.g. VK_FORMAT_R32G32B32A32_SFLOAT
+		// describes how texel data is stored in memory and how it is interpreted by Vulkan
 		.format = format,
-		.extent = VkExtent3D {.width = width, .height = height, .depth = 1 },
+		// The extent of an image is its size in texels
+		.extent = VkExtent3D{.width = width, .height = height, .depth = 1},
 		.mipLevels = mipLevels,
 		.arrayLayers = (uint32_t)((flags == VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) ? 6 : 1),
 		.samples = VK_SAMPLE_COUNT_1_BIT,
+		// The next few fields describe how the image will be used
 		.tiling = tiling,
 		.usage = usage,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -1385,14 +1468,16 @@ bool createImage(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t widt
 }
 
 bool createVolume(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height, uint32_t depth,
-	VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory, VkImageCreateFlags flags) {
+                  VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+                  VkImage& image, VkDeviceMemory& imageMemory, VkImageCreateFlags flags)
+{
 	const VkImageCreateInfo imageInfo = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.pNext = nullptr,
 		.flags = flags,
 		.imageType = VK_IMAGE_TYPE_3D,
 		.format = format,
-		.extent = VkExtent3D {.width = width, .height = height, .depth = depth },
+		.extent = VkExtent3D{.width = width, .height = height, .depth = depth},
 		.mipLevels = 1,
 		.arrayLayers = 1,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
@@ -1425,7 +1510,14 @@ bool createVolume(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t wid
 // For volumes use the call
 // createImageView(device, image, /* whatever the format is */ VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, VkImageView* imageView, VK_IMAGE_VIEW_TYPE_3D, 1)
 
-bool createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VkImageView* imageView, VkImageViewType viewType, uint32_t layerCount, uint32_t mipLevels)
+bool createImageView(VkDevice device,
+                     VkImage image,
+                     VkFormat format,
+                     VkImageAspectFlags aspectFlags,
+                     VkImageView* imageView,
+                     VkImageViewType viewType,
+                     uint32_t layerCount,
+                     uint32_t mipLevels)
 {
 	const VkImageViewCreateInfo viewInfo =
 	{
@@ -1448,28 +1540,36 @@ bool createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAsp
 	return (vkCreateImageView(device, &viewInfo, nullptr, imageView) == VK_SUCCESS);
 }
 
-bool createColorOnlyRenderPass(VulkanRenderDevice& vkDev, VkRenderPass* renderPass, const RenderPassCreateInfo& ci, VkFormat colorFormat)
+bool createColorOnlyRenderPass(VulkanRenderDevice& vkDev, VkRenderPass* renderPass, const RenderPassCreateInfo& ci,
+                               VkFormat colorFormat)
 {
 	RenderPassCreateInfo ci2 = ci;
 	ci2.clearDepth_ = false;
 	return createColorAndDepthRenderPass(vkDev, false, renderPass, ci2, colorFormat);
 }
 
-bool createColorAndDepthRenderPass(VulkanRenderDevice& vkDev, bool useDepth, VkRenderPass* renderPass, const RenderPassCreateInfo& ci, VkFormat colorFormat)
+bool createColorAndDepthRenderPass(VulkanRenderDevice& vkDev, bool useDepth, VkRenderPass* renderPass,
+                                   const RenderPassCreateInfo& ci, VkFormat colorFormat)
 {
 	const bool offscreenInt = ci.flags_ & eRenderPassBit_OffscreenInternal;
 	const bool first = ci.flags_ & eRenderPassBit_First;
-	const bool last  = ci.flags_ & eRenderPassBit_Last;
+	const bool last = ci.flags_ & eRenderPassBit_Last;
 
 	VkAttachmentDescription colorAttachment = {
 		.flags = 0,
 		.format = colorFormat,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.loadOp = offscreenInt ? VK_ATTACHMENT_LOAD_OP_LOAD : (ci.clearColor_ ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD),
+		.loadOp = offscreenInt
+			          ? VK_ATTACHMENT_LOAD_OP_LOAD
+			          : (ci.clearColor_ ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD),
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.initialLayout = first ? VK_IMAGE_LAYOUT_UNDEFINED : (offscreenInt ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+		.initialLayout = first
+			                 ? VK_IMAGE_LAYOUT_UNDEFINED
+			                 : (offscreenInt
+				                    ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				                    : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
 		.finalLayout = last ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 	};
 
@@ -1482,11 +1582,17 @@ bool createColorAndDepthRenderPass(VulkanRenderDevice& vkDev, bool useDepth, VkR
 		.flags = 0,
 		.format = useDepth ? findDepthFormat(vkDev.physicalDevice) : VK_FORMAT_D32_SFLOAT,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.loadOp = offscreenInt ? VK_ATTACHMENT_LOAD_OP_LOAD : (ci.clearDepth_ ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD),
+		.loadOp = offscreenInt
+			          ? VK_ATTACHMENT_LOAD_OP_LOAD
+			          : (ci.clearDepth_ ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD),
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.initialLayout = ci.clearDepth_ ? VK_IMAGE_LAYOUT_UNDEFINED : (offscreenInt ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),
+		.initialLayout = ci.clearDepth_
+			                 ? VK_IMAGE_LAYOUT_UNDEFINED
+			                 : (offscreenInt
+				                    ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				                    : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),
 		.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 	};
 
@@ -1515,9 +1621,9 @@ bool createColorAndDepthRenderPass(VulkanRenderDevice& vkDev, bool useDepth, VkR
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
- 		// Use subpass dependencies for layout transitions
- 		dependencies.resize(2);
- 
+		// Use subpass dependencies for layout transitions
+		dependencies.resize(2);
+
 		dependencies[0] = {
 			.srcSubpass = VK_SUBPASS_EXTERNAL,
 			.dstSubpass = 0,
@@ -1552,7 +1658,7 @@ bool createColorAndDepthRenderPass(VulkanRenderDevice& vkDev, bool useDepth, VkR
 		.pPreserveAttachments = nullptr
 	};
 
-	std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+	std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
 
 	const VkRenderPassCreateInfo renderPassInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -1579,7 +1685,11 @@ bool createDepthOnlyRenderPass(VulkanRenderDevice& vkDev, VkRenderPass* renderPa
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.initialLayout = ci.clearDepth_ ? VK_IMAGE_LAYOUT_UNDEFINED : (ci.flags_ & eRenderPassBit_OffscreenInternal ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),
+		.initialLayout = ci.clearDepth_
+			                 ? VK_IMAGE_LAYOUT_UNDEFINED
+			                 : (ci.flags_ & eRenderPassBit_OffscreenInternal
+				                    ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				                    : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),
 		.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 	};
 
@@ -1594,28 +1704,28 @@ bool createDepthOnlyRenderPass(VulkanRenderDevice& vkDev, VkRenderPass* renderPa
 	{
 		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
- 		// Use subpass dependencies for layout transitions
-/* 		dependencies.resize(2);
- 
-		dependencies[0] = {
-			.srcSubpass = VK_SUBPASS_EXTERNAL,
-			.dstSubpass = 0,
-			.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, //VK_PIPELINE_STAGE_DEPTH_STENCIL_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = VK_ACCESS_SHADER_READ_BIT,
-			.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-		};
-
-		dependencies[1] = {
-			.srcSubpass = 0,
-			.dstSubpass = VK_SUBPASS_EXTERNAL,
-			.srcStageMask = VK_PIPELINE_STAGE_DEPTH_STENCIL_ATTACHMENT_OUTPUT_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-			.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			.dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-			.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-		};*/
+		// Use subpass dependencies for layout transitions
+		/* 		dependencies.resize(2);
+		 
+				dependencies[0] = {
+					.srcSubpass = VK_SUBPASS_EXTERNAL,
+					.dstSubpass = 0,
+					.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, //VK_PIPELINE_STAGE_DEPTH_STENCIL_ATTACHMENT_OUTPUT_BIT,
+					.srcAccessMask = VK_ACCESS_SHADER_READ_BIT,
+					.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+					.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+				};
+		
+				dependencies[1] = {
+					.srcSubpass = 0,
+					.dstSubpass = VK_SUBPASS_EXTERNAL,
+					.srcStageMask = VK_PIPELINE_STAGE_DEPTH_STENCIL_ATTACHMENT_OUTPUT_BIT,
+					.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+					.dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
+					.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+				};*/
 	}
 
 	const VkSubpassDescription subpass = {
@@ -1709,7 +1819,8 @@ void copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer, VkBuffer dstBuffe
 	endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
+void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image, VkFormat format, VkImageLayout oldLayout,
+                           VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
@@ -1718,7 +1829,8 @@ void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image, VkFormat fo
 	endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
+void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout,
+                              VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
 {
 	VkImageMemoryBarrier barrier = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -1730,7 +1842,7 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.image = image,
-		.subresourceRange = VkImageSubresourceRange {
+		.subresourceRange = VkImageSubresourceRange{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 			.baseMipLevel = 0,
 			.levelCount = mipLevels,
@@ -1752,29 +1864,34 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 	{
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-		if (hasStencilComponent(format)) {
+		if (hasStencilComponent(format))
+		{
 			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 		}
 	}
-	else {
+	else
+	{
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
 		barrier.srcAccessMask = 0;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	} else
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL)
+	{
 		barrier.srcAccessMask = 0;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
 		barrier.srcAccessMask = 0;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
@@ -1782,7 +1899,8 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
 	/* Convert back from read-only to updateable */
-	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
@@ -1790,7 +1908,8 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
 	/* Convert from updateable texture to shader read-only */
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -1798,29 +1917,35 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 	/* Convert depth texture from undefined state to depth-stencil buffer */
-	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
 		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	}
 
 	/* Wait for render pass to complete */
-	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout ==
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
 		barrier.srcAccessMask = 0; // VK_ACCESS_SHADER_READ_BIT;
 		barrier.dstAccessMask = 0;
-/*
-		sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-///		destinationStage = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-		destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-*/
+		/*
+				sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		///		destinationStage = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+				destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		*/
 		sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 
 	/* Convert back from read-only to color attachment */
-	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout ==
+		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
@@ -1828,7 +1953,9 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 		destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	}
 	/* Convert from updateable texture to shader read-only */
-	else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout ==
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -1837,7 +1964,9 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 	}
 
 	/* Convert back from read-only to depth attachment */
-	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout ==
+		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
@@ -1845,7 +1974,9 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 		destinationStage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 	}
 	/* Convert from updateable depth texture to shader read-only */
-	else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && newLayout ==
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -1864,9 +1995,9 @@ void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFo
 }
 
 bool createDepthOnlyFramebuffer(VulkanRenderDevice& vkDev,
-	uint32_t width, uint32_t height,
-	VkRenderPass renderPass, VkImageView depthImageView,
-	VkFramebuffer* framebuffer)
+                                uint32_t width, uint32_t height,
+                                VkRenderPass renderPass, VkImageView depthImageView,
+                                VkFramebuffer* framebuffer)
 {
 	VkImageView attachment = depthImageView;
 
@@ -1886,11 +2017,11 @@ bool createDepthOnlyFramebuffer(VulkanRenderDevice& vkDev,
 }
 
 bool createColorAndDepthFramebuffer(VulkanRenderDevice& vkDev,
-	uint32_t width, uint32_t height,
-	VkRenderPass renderPass, VkImageView colorImageView, VkImageView depthImageView,
-	VkFramebuffer* framebuffer)
+                                    uint32_t width, uint32_t height,
+                                    VkRenderPass renderPass, VkImageView colorImageView, VkImageView depthImageView,
+                                    VkFramebuffer* framebuffer)
 {
-	std::array<VkImageView, 2> attachments = { colorImageView, depthImageView };
+	std::array<VkImageView, 2> attachments = {colorImageView, depthImageView};
 
 	const VkFramebufferCreateInfo framebufferInfo = {
 		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
@@ -1907,11 +2038,13 @@ bool createColorAndDepthFramebuffer(VulkanRenderDevice& vkDev,
 	return (vkCreateFramebuffer(vkDev.device, &framebufferInfo, nullptr, framebuffer) == VK_SUCCESS);
 }
 
-bool createColorAndDepthFramebuffers(VulkanRenderDevice& vkDev, VkRenderPass renderPass, VkImageView depthImageView, std::vector<VkFramebuffer>& swapchainFramebuffers)
+bool createColorAndDepthFramebuffers(VulkanRenderDevice& vkDev, VkRenderPass renderPass, VkImageView depthImageView,
+                                     std::vector<VkFramebuffer>& swapchainFramebuffers)
 {
 	swapchainFramebuffers.resize(vkDev.swapchainImageViews.size());
 
-	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++) {
+	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
+	{
 		std::array<VkImageView, 2> attachments = {
 			vkDev.swapchainImageViews[i],
 			depthImageView
@@ -1935,7 +2068,8 @@ bool createColorAndDepthFramebuffers(VulkanRenderDevice& vkDev, VkRenderPass ren
 	return true;
 }
 
-void copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount)
+void copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
+                       uint32_t layerCount)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
@@ -1943,14 +2077,14 @@ void copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image
 		.bufferOffset = 0,
 		.bufferRowLength = 0,
 		.bufferImageHeight = 0,
-		.imageSubresource = VkImageSubresourceLayers {
+		.imageSubresource = VkImageSubresourceLayers{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 			.mipLevel = 0,
 			.baseArrayLayer = 0,
 			.layerCount = layerCount
 		},
-		.imageOffset = VkOffset3D {.x = 0, .y = 0, .z = 0 },
-		.imageExtent = VkExtent3D {.width = width, .height = height, .depth = 1 }
+		.imageOffset = VkOffset3D{.x = 0, .y = 0, .z = 0},
+		.imageExtent = VkExtent3D{.width = width, .height = height, .depth = 1}
 	};
 
 	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
@@ -1958,7 +2092,8 @@ void copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image
 	endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void copyMIPBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image, uint32_t mipLevels, uint32_t width, uint32_t height, uint32_t bytesPP, uint32_t layerCount)
+void copyMIPBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image, uint32_t mipLevels, uint32_t width,
+                          uint32_t height, uint32_t bytesPP, uint32_t layerCount)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
@@ -1966,20 +2101,20 @@ void copyMIPBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage im
 	uint32_t offset = 0;
 	std::vector<VkBufferImageCopy> regions(mipLevels);
 
-	for (uint32_t i = 0 ; i < mipLevels ; i++)
+	for (uint32_t i = 0; i < mipLevels; i++)
 	{
 		const VkBufferImageCopy region = {
 			.bufferOffset = offset,
 			.bufferRowLength = 0,
 			.bufferImageHeight = 0,
-			.imageSubresource = VkImageSubresourceLayers {
+			.imageSubresource = VkImageSubresourceLayers{
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 				.mipLevel = i,
 				.baseArrayLayer = 0,
 				.layerCount = layerCount
 			},
-			.imageOffset = VkOffset3D {.x = 0, .y = 0, .z = 0 },
-			.imageExtent = VkExtent3D {.width = w, .height = h, .depth = 1 }
+			.imageOffset = VkOffset3D{.x = 0, .y = 0, .z = 0},
+			.imageExtent = VkExtent3D{.width = w, .height = h, .depth = 1}
 		};
 
 		offset += w * h * layerCount * bytesPP;
@@ -1990,12 +2125,14 @@ void copyMIPBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage im
 		h >>= 1;
 	}
 
-	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)regions.size(), regions.data());
+	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)regions.size(),
+	                       regions.data());
 
 	endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void copyBufferToVolume(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t depth)
+void copyBufferToVolume(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
+                        uint32_t depth)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
@@ -2003,14 +2140,14 @@ void copyBufferToVolume(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage imag
 		.bufferOffset = 0,
 		.bufferRowLength = 0,
 		.bufferImageHeight = 0,
-		.imageSubresource = VkImageSubresourceLayers {
+		.imageSubresource = VkImageSubresourceLayers{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 			.mipLevel = 0,
 			.baseArrayLayer = 0,
 			.layerCount = 1
 		},
-		.imageOffset = VkOffset3D {.x = 0, .y = 0, .z = 0 },
-		.imageExtent = VkExtent3D {.width = width, .height = height, .depth = depth }
+		.imageOffset = VkOffset3D{.x = 0, .y = 0, .z = 0},
+		.imageExtent = VkExtent3D{.width = width, .height = height, .depth = depth}
 	};
 
 	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
@@ -2018,7 +2155,8 @@ void copyBufferToVolume(VulkanRenderDevice& vkDev, VkBuffer buffer, VkImage imag
 	endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void copyImageToBuffer(VulkanRenderDevice& vkDev, VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount)
+void copyImageToBuffer(VulkanRenderDevice& vkDev, VkImage image, VkBuffer buffer, uint32_t width, uint32_t height,
+                       uint32_t layerCount)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
@@ -2026,14 +2164,14 @@ void copyImageToBuffer(VulkanRenderDevice& vkDev, VkImage image, VkBuffer buffer
 		.bufferOffset = 0,
 		.bufferRowLength = 0,
 		.bufferImageHeight = 0,
-		.imageSubresource = VkImageSubresourceLayers {
+		.imageSubresource = VkImageSubresourceLayers{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 			.mipLevel = 0,
 			.baseArrayLayer = 0,
 			.layerCount = layerCount
 		},
-		.imageOffset = VkOffset3D {.x = 0, .y = 0, .z = 0 },
-		.imageExtent = VkExtent3D {.width = width, .height = height, .depth = 1 }
+		.imageOffset = VkOffset3D{.x = 0, .y = 0, .z = 0},
+		.imageExtent = VkExtent3D{.width = width, .height = height, .depth = 1}
 	};
 
 	vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
@@ -2058,30 +2196,32 @@ uint32_t bytesPerTexFormat(VkFormat fmt)
 {
 	switch (fmt)
 	{
-		case VK_FORMAT_R8_SINT:
-		case VK_FORMAT_R8_UNORM:
-			return 1;
-		case VK_FORMAT_R16_SFLOAT:
-			return 2;
-		case VK_FORMAT_R16G16_SFLOAT:
-			return 4;
-		case VK_FORMAT_R16G16_SNORM:
-			return 4;
-		case VK_FORMAT_B8G8R8A8_UNORM:
-			return 4;
-		case VK_FORMAT_R8G8B8A8_UNORM:
-			return 4;
-		case VK_FORMAT_R16G16B16A16_SFLOAT:
-			return 4 * sizeof(uint16_t);
-		case VK_FORMAT_R32G32B32A32_SFLOAT:
-			return 4 * sizeof(float);
-		default:
-			break;
+	case VK_FORMAT_R8_SINT:
+	case VK_FORMAT_R8_UNORM:
+		return 1;
+	case VK_FORMAT_R16_SFLOAT:
+		return 2;
+	case VK_FORMAT_R16G16_SFLOAT:
+		return 4;
+	case VK_FORMAT_R16G16_SNORM:
+		return 4;
+	case VK_FORMAT_B8G8R8A8_UNORM:
+		return 4;
+	case VK_FORMAT_R8G8B8A8_UNORM:
+		return 4;
+	case VK_FORMAT_R16G16B16A16_SFLOAT:
+		return 4 * sizeof(uint16_t);
+	case VK_FORMAT_R32G32B32A32_SFLOAT:
+		return 4 * sizeof(float);
+	default:
+		break;
 	}
 	return 0;
 }
 
-bool updateTextureVolume(VulkanRenderDevice& vkDev, VkImage& textureVolume, VkDeviceMemory& textureVolumeMemory, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth, VkFormat texFormat, const void* volumeData, VkImageLayout sourceImageLayout)
+bool updateTextureVolume(VulkanRenderDevice& vkDev, VkImage& textureVolume, VkDeviceMemory& textureVolumeMemory,
+                         uint32_t texWidth, uint32_t texHeight, uint32_t texDepth, VkFormat texFormat,
+                         const void* volumeData, VkImageLayout sourceImageLayout)
 {
 	uint32_t bytesPerPixel = bytesPerTexFormat(texFormat);
 
@@ -2089,13 +2229,16 @@ bool updateTextureVolume(VulkanRenderDevice& vkDev, VkImage& textureVolume, VkDe
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
-	createBuffer(vkDev.device, vkDev.physicalDevice, volumeSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	createBuffer(vkDev.device, vkDev.physicalDevice, volumeSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+	             stagingBufferMemory);
 
 	uploadBufferData(vkDev, stagingBufferMemory, 0, volumeData, volumeSize);
 
 	transitionImageLayout(vkDev, textureVolume, texFormat, sourceImageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
-		copyBufferToVolume(vkDev, stagingBuffer, textureVolume, texWidth, texHeight, texDepth);
-	transitionImageLayout(vkDev, textureVolume, texFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
+	copyBufferToVolume(vkDev, stagingBuffer, textureVolume, texWidth, texHeight, texDepth);
+	transitionImageLayout(vkDev, textureVolume, texFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
 
 	vkDestroyBuffer(vkDev.device, stagingBuffer, nullptr);
 	vkFreeMemory(vkDev.device, stagingBufferMemory, nullptr);
@@ -2103,7 +2246,15 @@ bool updateTextureVolume(VulkanRenderDevice& vkDev, VkImage& textureVolume, VkDe
 	return true;
 }
 
-bool updateTextureImage(VulkanRenderDevice& vkDev, VkImage& textureImage, VkDeviceMemory& textureImageMemory, uint32_t texWidth, uint32_t texHeight, VkFormat texFormat, uint32_t layerCount, const void* imageData, VkImageLayout sourceImageLayout)
+bool updateTextureImage(VulkanRenderDevice& vkDev,
+                        VkImage& textureImage,
+                        VkDeviceMemory& textureImageMemory,
+                        uint32_t texWidth,
+                        uint32_t texHeight,
+                        VkFormat texFormat,
+                        uint32_t layerCount,
+                        const void* imageData,
+                        VkImageLayout sourceImageLayout)
 {
 	uint32_t bytesPerPixel = bytesPerTexFormat(texFormat);
 
@@ -2112,13 +2263,36 @@ bool updateTextureImage(VulkanRenderDevice& vkDev, VkImage& textureImage, VkDevi
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
-	createBuffer(vkDev.device, vkDev.physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	createBuffer(vkDev.device,
+	             vkDev.physicalDevice,
+	             imageSize,
+	             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	             stagingBuffer,
+	             stagingBufferMemory);
 
 	uploadBufferData(vkDev, stagingBufferMemory, 0, imageData, imageSize);
 
-	transitionImageLayout(vkDev, textureImage, texFormat, sourceImageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layerCount);
-		copyBufferToImage(vkDev, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), layerCount);
-	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, layerCount);
+	transitionImageLayout(vkDev,
+	                      textureImage,
+	                      texFormat,
+	                      sourceImageLayout,
+	                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	                      layerCount);
+
+	copyBufferToImage(vkDev,
+	                  stagingBuffer,
+	                  textureImage,
+	                  static_cast<uint32_t>(texWidth),
+	                  static_cast<uint32_t>(texHeight),
+	                  layerCount);
+
+	transitionImageLayout(vkDev,
+	                      textureImage,
+	                      texFormat,
+	                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+	                      layerCount);
 
 	vkDestroyBuffer(vkDev.device, stagingBuffer, nullptr);
 	vkFreeMemory(vkDev.device, stagingBufferMemory, nullptr);
@@ -2126,7 +2300,8 @@ bool updateTextureImage(VulkanRenderDevice& vkDev, VkImage& textureImage, VkDevi
 	return true;
 }
 
-bool downloadImageData(VulkanRenderDevice& vkDev, VkImage& textureImage, uint32_t texWidth, uint32_t texHeight, VkFormat texFormat, uint32_t layerCount, void* imageData, VkImageLayout sourceImageLayout)
+bool downloadImageData(VulkanRenderDevice& vkDev, VkImage& textureImage, uint32_t texWidth, uint32_t texHeight,
+                       VkFormat texFormat, uint32_t layerCount, void* imageData, VkImageLayout sourceImageLayout)
 {
 	uint32_t bytesPerPixel = bytesPerTexFormat(texFormat);
 
@@ -2135,11 +2310,16 @@ bool downloadImageData(VulkanRenderDevice& vkDev, VkImage& textureImage, uint32_
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
-	createBuffer(vkDev.device, vkDev.physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	createBuffer(vkDev.device, vkDev.physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+	             stagingBufferMemory);
 
-	transitionImageLayout(vkDev, textureImage, texFormat, sourceImageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, layerCount);
-		copyImageToBuffer(vkDev, textureImage, stagingBuffer, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), layerCount);
-	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, sourceImageLayout, layerCount);
+	transitionImageLayout(vkDev, textureImage, texFormat, sourceImageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+	                      layerCount);
+	copyImageToBuffer(vkDev, textureImage, stagingBuffer, static_cast<uint32_t>(texWidth),
+	                  static_cast<uint32_t>(texHeight), layerCount);
+	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, sourceImageLayout,
+	                      layerCount);
 
 	downloadBufferData(vkDev, stagingBufferMemory, 0, imageData, imageSize);
 
@@ -2153,13 +2333,16 @@ bool createDepthResources(VulkanRenderDevice& vkDev, uint32_t width, uint32_t he
 {
 	VkFormat depthFormat = findDepthFormat(vkDev.physicalDevice);
 
-	if (!createImage(vkDev.device, vkDev.physicalDevice, width, height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.imageMemory))
+	if (!createImage(vkDev.device, vkDev.physicalDevice, width, height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
+	                 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image,
+	                 depth.imageMemory))
 		return false;
 
 	if (!createImageView(vkDev.device, depth.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, &depth.imageView))
 		return false;
 
-	transitionImageLayout(vkDev, depth.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	transitionImageLayout(vkDev, depth.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED,
+	                      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
 	return true;
 }
@@ -2179,20 +2362,21 @@ bool createPipelineLayout(VkDevice device, VkDescriptorSetLayout dsLayout, VkPip
 	return (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS);
 }
 
-bool createPipelineLayoutWithConstants(VkDevice device, VkDescriptorSetLayout dsLayout, VkPipelineLayout* pipelineLayout, uint32_t vtxConstSize, uint32_t fragConstSize)
+bool createPipelineLayoutWithConstants(VkDevice device, VkDescriptorSetLayout dsLayout,
+                                       VkPipelineLayout* pipelineLayout, uint32_t vtxConstSize, uint32_t fragConstSize)
 {
 	const VkPushConstantRange ranges[] =
 	{
 		{
-			VK_SHADER_STAGE_VERTEX_BIT,   // stageFlags
-			0,                            // offset
-			vtxConstSize                  // size
+			VK_SHADER_STAGE_VERTEX_BIT, // stageFlags
+			0, // offset
+			vtxConstSize // size
 		},
 
 		{
 			VK_SHADER_STAGE_FRAGMENT_BIT, // stageFlags
-			vtxConstSize,                 // offset
-			fragConstSize                 // size
+			vtxConstSize, // offset
+			fragConstSize // size
 		}
 	};
 
@@ -2205,8 +2389,7 @@ bool createPipelineLayoutWithConstants(VkDevice device, VkDescriptorSetLayout ds
 		.setLayoutCount = 1,
 		.pSetLayouts = &dsLayout,
 		.pushConstantRangeCount = constSize,
-		.pPushConstantRanges = (constSize == 0) ? nullptr :
-			(vtxConstSize > 0 ? ranges : &ranges[1])
+		.pPushConstantRanges = (constSize == 0) ? nullptr : (vtxConstSize > 0 ? ranges : &ranges[1])
 	};
 
 	return (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS);
@@ -2216,23 +2399,28 @@ bool createPipelineLayoutWithConstants(VkDevice device, VkDescriptorSetLayout ds
 // createImageView(device, image, /* whatever the format is */ VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, VkImageView* imageView, VK_IMAGE_VIEW_TYPE_3D, 1)
 
 bool createTextureVolumeFromData(VulkanRenderDevice& vkDev,
-		VkImage& textureVolume, VkDeviceMemory& textureVolumeMemory,
-		void* volumeData, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth,
-		VkFormat texFormat,
-		VkImageCreateFlags flags)
+                                 VkImage& textureVolume, VkDeviceMemory& textureVolumeMemory,
+                                 void* volumeData, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth,
+                                 VkFormat texFormat,
+                                 VkImageCreateFlags flags)
 {
-	createVolume(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texDepth, texFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureVolume, textureVolumeMemory, flags);
+	createVolume(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texDepth, texFormat, VK_IMAGE_TILING_OPTIMAL,
+	             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+	             textureVolume, textureVolumeMemory, flags);
 
-	return updateTextureVolume(vkDev, textureVolume, textureVolumeMemory, texWidth, texHeight, texDepth, texFormat, volumeData);
+	return updateTextureVolume(vkDev, textureVolume, textureVolumeMemory, texWidth, texHeight, texDepth, texFormat,
+	                           volumeData);
 }
 
 bool createMIPTextureImageFromData(VulkanRenderDevice& vkDev,
-		VkImage& textureImage, VkDeviceMemory& textureImageMemory,
-		void* mipData, uint32_t mipLevels, uint32_t texWidth, uint32_t texHeight,
-		VkFormat texFormat,
-		uint32_t layerCount, VkImageCreateFlags flags)
+                                   VkImage& textureImage, VkDeviceMemory& textureImageMemory,
+                                   void* mipData, uint32_t mipLevels, uint32_t texWidth, uint32_t texHeight,
+                                   VkFormat texFormat,
+                                   uint32_t layerCount, VkImageCreateFlags flags)
 {
-	createImage(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory, flags, mipLevels);
+	createImage(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texFormat, VK_IMAGE_TILING_OPTIMAL,
+	            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+	            textureImage, textureImageMemory, flags, mipLevels);
 
 	// now allocate staging buffer for all MIP levels
 	uint32_t bytesPerPixel = bytesPerTexFormat(texFormat);
@@ -2241,7 +2429,7 @@ bool createMIPTextureImageFromData(VulkanRenderDevice& vkDev,
 	VkDeviceSize imageSize = layerSize * layerCount;
 
 	uint32_t w = texWidth, h = texHeight;
-	for (uint32_t i = 1 ; i < mipLevels ; i++)
+	for (uint32_t i = 1; i < mipLevels; i++)
 	{
 		w >>= 1;
 		h >>= 1;
@@ -2250,13 +2438,17 @@ bool createMIPTextureImageFromData(VulkanRenderDevice& vkDev,
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
-	createBuffer(vkDev.device, vkDev.physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	createBuffer(vkDev.device, vkDev.physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+	             stagingBufferMemory);
 
 	uploadBufferData(vkDev, stagingBufferMemory, 0, mipData, imageSize);
 
-	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_UNDEFINED/*sourceImageLayout*/, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layerCount, mipLevels);
-		copyMIPBufferToImage(vkDev, stagingBuffer, textureImage, mipLevels, texWidth, texHeight, bytesPerPixel, layerCount);
-	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, layerCount, mipLevels);
+	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_UNDEFINED/*sourceImageLayout*/,
+	                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layerCount, mipLevels);
+	copyMIPBufferToImage(vkDev, stagingBuffer, textureImage, mipLevels, texWidth, texHeight, bytesPerPixel, layerCount);
+	transitionImageLayout(vkDev, textureImage, texFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, layerCount, mipLevels);
 
 	vkDestroyBuffer(vkDev.device, stagingBuffer, nullptr);
 	vkFreeMemory(vkDev.device, stagingBufferMemory, nullptr);
@@ -2265,17 +2457,49 @@ bool createMIPTextureImageFromData(VulkanRenderDevice& vkDev,
 }
 
 bool createTextureImageFromData(VulkanRenderDevice& vkDev,
-		VkImage& textureImage, VkDeviceMemory& textureImageMemory,
-		void* imageData, uint32_t texWidth, uint32_t texHeight,
-		VkFormat texFormat,
-		uint32_t layerCount, VkImageCreateFlags flags)
+                                VkImage& textureImage,
+                                VkDeviceMemory& textureImageMemory,
+                                void* imageData,
+                                uint32_t texWidth,
+                                uint32_t texHeight,
+                                VkFormat texFormat,
+                                uint32_t layerCount,
+                                VkImageCreateFlags flags)
 {
-	createImage(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory, flags);
+	createImage(vkDev.device,
+	            vkDev.physicalDevice,
+	            texWidth,
+	            texHeight,
+	            texFormat,
+	            // Optimal tiling will perform significantly better than linear tiling
+	            VK_IMAGE_TILING_OPTIMAL,
+	            // the image will be used as the destination of transfer commands AND
+	            // the image is to be used as a texture in one of our shaders
+	            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+	            //the memory is local to device
+	            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+	            textureImage,
+	            textureImageMemory,
+	            flags);
 
-	return updateTextureImage(vkDev, textureImage, textureImageMemory, texWidth, texHeight, texFormat, layerCount, imageData);
+	return updateTextureImage(vkDev,
+	                          textureImage,
+	                          textureImageMemory,
+	                          texWidth,
+	                          texHeight,
+	                          texFormat,
+	                          layerCount,
+	                          imageData);
 }
 
-static void float24to32(int w, int h, const float* img24, float *img32)
+/**
+ * \brief Given [float, float, float] stored in img24, compute [float, float, float, 1.0f] and put it in img32
+ * \param w texture width
+ * \param h texture height
+ * \param img24 source raw data in [float, float, float]
+ * \param img32 destination data in [float, float, float, 1.0f]
+ */
+static void float24to32(int w, int h, const float* img24, float* img32)
 {
 	const int numPixels = w * h;
 	for (int i = 0; i != numPixels; i++)
@@ -2287,13 +2511,16 @@ static void float24to32(int w, int h, const float* img24, float *img32)
 	}
 }
 
-bool createMIPTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, uint32_t* width, uint32_t* height)
+bool createMIPTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint32_t mipLevels, VkImage& textureImage,
+                           VkDeviceMemory& textureImageMemory, uint32_t* width, uint32_t* height)
 {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(filename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
-	if (!pixels) {
-		printf("Failed to load [%s] texture\n", filename); fflush(stdout);
+	if (!pixels)
+	{
+		printf("Failed to load [%s] texture\n", filename);
+		fflush(stdout);
 		return false;
 	}
 
@@ -2306,12 +2533,12 @@ bool createMIPTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint
 	memcpy(dst, pixels, imgSize);
 
 	uint32_t w = texWidth, h = texHeight;
-	for (uint32_t i = 1 ; i < mipLevels ; i++)
+	for (uint32_t i = 1; i < mipLevels; i++)
 	{
 		dst += (w * h * texChannels) >> 2;
 
 		stbir_resize_uint8(src, w, h, 0,
-				dst, w / 2, h / 2, 0, texChannels);
+		                   dst, w / 2, h / 2, 0, texChannels);
 
 		w >>= 1;
 		h >>= 1;
@@ -2319,8 +2546,8 @@ bool createMIPTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint
 	}
 
 	bool result = createMIPTextureImageFromData(vkDev, textureImage, textureImageMemory,
-		mipData.data(), mipLevels, texWidth, texHeight,
-		VK_FORMAT_R8G8B8A8_UNORM);
+	                                            mipData.data(), mipLevels, texWidth, texHeight,
+	                                            VK_FORMAT_R8G8B8A8_UNORM);
 
 	stbi_image_free(pixels);
 
@@ -2333,49 +2560,54 @@ bool createMIPTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint
 	return true;
 }
 
-bool createTextureImage(VulkanRenderDevice& vkDev, const char* filename, VkImage& textureImage, VkDeviceMemory& textureImageMemory, uint32_t* outTexWidth, uint32_t* outTexHeight)
+bool createTextureImage(VulkanRenderDevice& vkDev, const char* filename, VkImage& textureImage,
+                        VkDeviceMemory& textureImageMemory, uint32_t* outTexWidth, uint32_t* outTexHeight)
 {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(filename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
-	if (!pixels) {
-		printf("Failed to load [%s] texture\n", filename); fflush(stdout);
+	if (!pixels)
+	{
+		printf("Failed to load [%s] texture\n", filename);
+		fflush(stdout);
 		return false;
 	}
 
 	bool result = createTextureImageFromData(vkDev, textureImage, textureImageMemory,
-		pixels, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM);
+	                                         pixels, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM);
 
 	stbi_image_free(pixels);
 
-	if (outTexWidth && outTexHeight) {
-		*outTexWidth  = (uint32_t)texWidth;
+	if (outTexWidth && outTexHeight)
+	{
+		*outTexWidth = (uint32_t)texWidth;
 		*outTexHeight = (uint32_t)texHeight;
 	}
 
 	return result;
 }
 
-size_t allocateVertexBuffer(VulkanRenderDevice& vkDev, VkBuffer* storageBuffer, VkDeviceMemory* storageBufferMemory, size_t vertexDataSize, const void* vertexData, size_t indexDataSize, const void* indexData)
+size_t allocateVertexBuffer(VulkanRenderDevice& vkDev, VkBuffer* storageBuffer, VkDeviceMemory* storageBufferMemory,
+                            size_t vertexDataSize, const void* vertexData, size_t indexDataSize, const void* indexData)
 {
 	VkDeviceSize bufferSize = vertexDataSize + indexDataSize;
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
 	createBuffer(vkDev.device, vkDev.physicalDevice, bufferSize,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer, stagingBufferMemory);
+	             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	             stagingBuffer, stagingBufferMemory);
 
 	void* data;
 	vkMapMemory(vkDev.device, stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, vertexData, vertexDataSize);
-		memcpy((unsigned char *)data + vertexDataSize, indexData, indexDataSize);
+	memcpy(data, vertexData, vertexDataSize);
+	memcpy((unsigned char*)data + vertexDataSize, indexData, indexDataSize);
 	vkUnmapMemory(vkDev.device, stagingBufferMemory);
 
 	createBuffer(vkDev.device, vkDev.physicalDevice, bufferSize,
-		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *storageBuffer, *storageBufferMemory);
+	             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+	             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *storageBuffer, *storageBufferMemory);
 
 	copyBuffer(vkDev, stagingBuffer, *storageBuffer, bufferSize);
 
@@ -2385,14 +2617,15 @@ size_t allocateVertexBuffer(VulkanRenderDevice& vkDev, VkBuffer* storageBuffer, 
 	return bufferSize;
 }
 
-bool createTexturedVertexBuffer(VulkanRenderDevice& vkDev, const char* filename, VkBuffer* storageBuffer, VkDeviceMemory* storageBufferMemory, size_t* vertexBufferSize, size_t* indexBufferSize)
+bool createTexturedVertexBuffer(VulkanRenderDevice& vkDev, const char* filename, VkBuffer* storageBuffer,
+                                VkDeviceMemory* storageBufferMemory, size_t* vertexBufferSize, size_t* indexBufferSize)
 {
-	const aiScene* scene = aiImportFile( filename, aiProcess_Triangulate );
+	const aiScene* scene = aiImportFile(filename, aiProcess_Triangulate);
 
-	if ( !scene || !scene->HasMeshes() )
+	if (!scene || !scene->HasMeshes())
 	{
-		printf( "Unable to load %s\n", filename );
-		exit( 255 );
+		printf("Unable to load %s\n", filename);
+		exit(255);
 	}
 
 	const aiMesh* mesh = scene->mMeshes[0];
@@ -2407,33 +2640,35 @@ bool createTexturedVertexBuffer(VulkanRenderDevice& vkDev, const char* filename,
 	{
 		const aiVector3D v = mesh->mVertices[i];
 		const aiVector3D t = mesh->mTextureCoords[0][i];
-		vertices.push_back({ .pos = vec3(v.x, v.z, v.y), .tc = vec2(t.x, t.y) });
+		vertices.push_back({.pos = vec3(v.x, v.z, v.y), .tc = vec2(t.x, t.y)});
 	}
 
 	std::vector<unsigned int> indices;
-	for ( unsigned i = 0; i != mesh->mNumFaces; i++ )
+	for (unsigned i = 0; i != mesh->mNumFaces; i++)
 	{
-		for ( unsigned j = 0; j != 3; j++ )
-			indices.push_back( mesh->mFaces[i].mIndices[j] );
+		for (unsigned j = 0; j != 3; j++)
+			indices.push_back(mesh->mFaces[i].mIndices[j]);
 	}
-	aiReleaseImport( scene );
+	aiReleaseImport(scene);
 
 	*vertexBufferSize = sizeof(VertexData) * vertices.size();
 	*indexBufferSize = sizeof(unsigned int) * indices.size();
 
-	allocateVertexBuffer(vkDev, storageBuffer, storageBufferMemory, *vertexBufferSize, vertices.data(), *indexBufferSize, indices.data());
+	allocateVertexBuffer(vkDev, storageBuffer, storageBufferMemory, *vertexBufferSize, vertices.data(),
+	                     *indexBufferSize, indices.data());
 
 	return true;
 }
 
-bool createPBRVertexBuffer(VulkanRenderDevice& vkDev, const char* filename, VkBuffer* storageBuffer, VkDeviceMemory* storageBufferMemory, size_t* vertexBufferSize, size_t* indexBufferSize)
+bool createPBRVertexBuffer(VulkanRenderDevice& vkDev, const char* filename, VkBuffer* storageBuffer,
+                           VkDeviceMemory* storageBufferMemory, size_t* vertexBufferSize, size_t* indexBufferSize)
 {
-	const aiScene* scene = aiImportFile( filename, aiProcess_Triangulate );
+	const aiScene* scene = aiImportFile(filename, aiProcess_Triangulate);
 
-	if ( !scene || !scene->HasMeshes() )
+	if (!scene || !scene->HasMeshes())
 	{
-		printf( "Unable to load %s\n", filename );
-		exit( 255 );
+		printf("Unable to load %s\n", filename);
+		exit(255);
 	}
 
 	const aiMesh* mesh = scene->mMeshes[0];
@@ -2450,33 +2685,40 @@ bool createPBRVertexBuffer(VulkanRenderDevice& vkDev, const char* filename, VkBu
 		const aiVector3D v = mesh->mVertices[i];
 		const aiVector3D t = mesh->mTextureCoords[0][i];
 		const aiVector3D n = mesh->mNormals[i];
-		vertices.push_back({ .pos = vec4(v.x, v.y, v.z, 1.0f), .n = vec4(n.x, n.y, n.z, 0.0f), .tc = vec4(t.x, 1.0f - t.y, 0.0f, 0.0f) });
+		vertices.push_back({
+			.pos = vec4(v.x, v.y, v.z, 1.0f), .n = vec4(n.x, n.y, n.z, 0.0f), .tc = vec4(t.x, 1.0f - t.y, 0.0f, 0.0f)
+		});
 	}
 
 	std::vector<unsigned int> indices;
-	for ( unsigned i = 0; i != mesh->mNumFaces; i++ )
+	for (unsigned i = 0; i != mesh->mNumFaces; i++)
 	{
-		for ( unsigned j = 0; j != 3; j++ )
-			indices.push_back( mesh->mFaces[i].mIndices[j] );
+		for (unsigned j = 0; j != 3; j++)
+			indices.push_back(mesh->mFaces[i].mIndices[j]);
 	}
-	aiReleaseImport( scene );
+	aiReleaseImport(scene);
 
 	*vertexBufferSize = sizeof(VertexData) * vertices.size();
 	*indexBufferSize = sizeof(unsigned int) * indices.size();
 
-	allocateVertexBuffer(vkDev, storageBuffer, storageBufferMemory, *vertexBufferSize, vertices.data(), *indexBufferSize, indices.data());
+	allocateVertexBuffer(vkDev, storageBuffer, storageBufferMemory, *vertexBufferSize, vertices.data(),
+	                     *indexBufferSize, indices.data());
 
 	return true;
 }
 
-bool createMIPCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, uint32_t* width, uint32_t* height)
+bool createMIPCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, uint32_t mipLevels,
+                               VkImage& textureImage, VkDeviceMemory& textureImageMemory, uint32_t* width,
+                               uint32_t* height)
 {
 	int comp;
 	int texWidth, texHeight;
 	const float* img = stbi_loadf(filename, &texWidth, &texHeight, &comp, 3);
 
-	if (!img) {
-		printf("Failed to load [%s] texture\n", filename); fflush(stdout);
+	if (!img)
+	{
+		printf("Failed to load [%s] texture\n", filename);
+		fflush(stdout);
 		return false;
 	}
 
@@ -2484,7 +2726,7 @@ bool createMIPCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, 
 	uint32_t mipSize = imageSize * 6;
 
 	uint32_t w = texWidth, h = texHeight;
-	for (uint32_t i = 1 ; i < mipLevels ; i++)
+	for (uint32_t i = 1; i < mipLevels; i++)
 	{
 		imageSize = w * h * 4;
 		w >>= 1;
@@ -2500,7 +2742,7 @@ bool createMIPCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, 
 	h = texHeight;
 	float24to32(w, h, img, dst);
 
-	for (uint32_t i = 1 ; i < mipLevels ; i++)
+	for (uint32_t i = 1; i < mipLevels; i++)
 	{
 		imageSize = w * h * 4;
 		dst += w * h * 4;
@@ -2522,7 +2764,7 @@ bool createMIPCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, 
 	w = texWidth;
 	h = texHeight;
 	uint32_t faceSize = w / 4;
-	for (uint32_t i = 0 ; i < mipLevels ; i++)
+	for (uint32_t i = 0; i < mipLevels; i++)
 	{
 		Bitmap in(w, h, 4, eBitmapFormat_Float, src);
 		Bitmap out = convertEquirectangularMapToVerticalCross(in);
@@ -2547,47 +2789,63 @@ bool createMIPCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, 
 	}
 
 	return createMIPTextureImageFromData(vkDev,
-		textureImage, textureImageMemory,
-		mipCube.data(), mipLevels, faceSize, faceSize,
-		VK_FORMAT_R32G32B32A32_SFLOAT,
-		6, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
+	                                     textureImage, textureImageMemory,
+	                                     mipCube.data(), mipLevels, faceSize, faceSize,
+	                                     VK_FORMAT_R32G32B32A32_SFLOAT,
+	                                     6, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 }
 
-bool createCubeTextureImage(VulkanRenderDevice& vkDev, const char* filename, VkImage& textureImage, VkDeviceMemory& textureImageMemory, uint32_t* width, uint32_t* height)
+bool createCubeTextureImage(VulkanRenderDevice& vkDev,
+                            const char* filename,
+                            VkImage& textureImage,
+                            VkDeviceMemory& textureImageMemory,
+                            uint32_t* width,
+                            uint32_t* height)
 {
+	// loads a cube map texture from a file
 	int w, h, comp;
 	const float* img = stbi_loadf(filename, &w, &h, &comp, 3);
-	std::vector<float> img32(w * h * 4);
 
+	// convert raw pixel data from [float, float, float] to [float, float, float, 1.0f]
+	std::vector<float> img32(w * h * 4);
 	float24to32(w, h, img, img32.data());
 
-	if (!img) {
-		printf("Failed to load [%s] texture\n", filename); fflush(stdout);
+	if (!img)
+	{
+		printf("Failed to load [%s] texture\n", filename);
+		// https://qr.ae/pvA5sC
+		fflush(stdout);
 		return false;
 	}
 
 	stbi_image_free((void*)img);
 
+	// convert HDR image into cube map faces: Equi => Vertical Cross => Cube Map Faces
 	Bitmap in(w, h, 4, eBitmapFormat_Float, img32.data());
 	Bitmap out = convertEquirectangularMapToVerticalCross(in);
-
 	Bitmap cube = convertVerticalCrossToCubeMapFaces(out);
 
+	// TODO: Why do we need this? 
 	if (width && height)
 	{
 		*width = w;
 		*height = h;
 	}
 
-	return createTextureImageFromData(vkDev, textureImage, textureImageMemory,
-		cube.data_.data(), cube.w_, cube.h_,
-		VK_FORMAT_R32G32B32A32_SFLOAT,
-		6, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
+	return createTextureImageFromData(vkDev,
+	                                  textureImage,
+	                                  textureImageMemory,
+	                                  cube.data_.data(),
+	                                  cube.w_,
+	                                  cube.h_,
+	                                  VK_FORMAT_R32G32B32A32_SFLOAT,
+	                                  6,
+	                                  VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 }
 
 bool executeComputeShader(VulkanRenderDevice& vkDev,
-	VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkDescriptorSet ds,
-	uint32_t xsize, uint32_t ysize, uint32_t zsize)
+                          VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkDescriptorSet ds,
+                          uint32_t xsize, uint32_t ysize, uint32_t zsize)
 {
 	VkCommandBuffer commandBuffer = vkDev.computeCommandBuffer;
 
@@ -2611,7 +2869,8 @@ bool executeComputeShader(VulkanRenderDevice& vkDev,
 		.dstAccessMask = VK_ACCESS_HOST_READ_BIT
 	};
 
-	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 1, &readoutBarrier, 0, nullptr, 0, nullptr);
+	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 1,
+	                     &readoutBarrier, 0, nullptr, 0, nullptr);
 
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
@@ -2626,13 +2885,15 @@ bool executeComputeShader(VulkanRenderDevice& vkDev,
 	return true;
 }
 
-VkResult createComputePipeline(VkDevice device, VkShaderModule computeShader, VkPipelineLayout pipelineLayout, VkPipeline* pipeline)
+VkResult createComputePipeline(VkDevice device, VkShaderModule computeShader, VkPipelineLayout pipelineLayout,
+                               VkPipeline* pipeline)
 {
 	VkComputePipelineCreateInfo computePipelineCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
 		.pNext = nullptr,
 		.flags = 0,
-		.stage = {  // ShaderStageInfo, just like in graphics pipeline, but with a single COMPUTE stage
+		.stage = {
+			// ShaderStageInfo, just like in graphics pipeline, but with a single COMPUTE stage
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 			.pNext = nullptr,
 			.flags = 0,
@@ -2644,7 +2905,7 @@ VkResult createComputePipeline(VkDevice device, VkShaderModule computeShader, Vk
 		},
 		.layout = pipelineLayout,
 		.basePipelineHandle = 0,
-		.basePipelineIndex  = 0
+		.basePipelineIndex = 0
 	};
 
 	/* no caching, single pipeline creation*/
@@ -2655,8 +2916,8 @@ VkResult createComputePipeline(VkDevice device, VkShaderModule computeShader, Vk
 bool createComputeDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout* descriptorSetLayout)
 {
 	VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[2] = {
-		{ 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, 0 },
-		{ 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, 0 }
+		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, 0},
+		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, 0}
 	};
 
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
@@ -2686,9 +2947,9 @@ void insertComputedBufferBarrier(VulkanRenderDevice& vkDev, VkCommandBuffer comm
 	};
 
 	vkCmdPipelineBarrier(commandBuffer,
-		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
-		0 /*VK_FLAGS_NONE*/, 0, nullptr, 1, &barrier, 0, nullptr);
+	                     VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+	                     VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+	                     0 /*VK_FLAGS_NONE*/, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
 void insertComputedImageBarrier(VkCommandBuffer commandBuffer, VkImage image)
@@ -2701,23 +2962,26 @@ void insertComputedImageBarrier(VkCommandBuffer commandBuffer, VkImage image)
 		.oldLayout = VK_IMAGE_LAYOUT_GENERAL,
 		.newLayout = VK_IMAGE_LAYOUT_GENERAL,
 		.image = image,
-		.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }
+		.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}
 	};
 
 	vkCmdPipelineBarrier(commandBuffer,
-		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-		0 /*VK_FLAGS_NONE*/, 0, nullptr, 0, nullptr, 1, &barrier);
+	                     VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+	                     VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+	                     0 /*VK_FLAGS_NONE*/, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 /** Offscreen rendering helpers */
 bool createOffscreenImage(VulkanRenderDevice& vkDev,
-		VkImage& textureImage, VkDeviceMemory& textureImageMemory,
-		uint32_t texWidth, uint32_t texHeight,
-		VkFormat texFormat,
-		uint32_t layerCount, VkImageCreateFlags flags)
+                          VkImage& textureImage, VkDeviceMemory& textureImageMemory,
+                          uint32_t texWidth, uint32_t texHeight,
+                          VkFormat texFormat,
+                          uint32_t layerCount, VkImageCreateFlags flags)
 {
-	return createImage(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT /* necessary only for screenshot */ | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory, flags);
+	return createImage(vkDev.device, vkDev.physicalDevice, texWidth, texHeight, texFormat, VK_IMAGE_TILING_OPTIMAL,
+	                   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+	                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT /* necessary only for screenshot */ | VK_IMAGE_USAGE_SAMPLED_BIT,
+	                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory, flags);
 }
 
 bool createDepthSampler(VkDevice device, VkSampler* sampler)
@@ -2745,19 +3009,21 @@ VkSampleCountFlagBits getMaxUsableSampleCount(VkPhysicalDevice physDevice)
 	VkPhysicalDeviceProperties physDeviceProps;
 	vkGetPhysicalDeviceProperties(physDevice, &physDeviceProps);
 
-	VkSampleCountFlags counts = physDeviceProps.limits.framebufferColorSampleCounts & physDeviceProps.limits.framebufferDepthSampleCounts;
+	VkSampleCountFlags counts = physDeviceProps.limits.framebufferColorSampleCounts & physDeviceProps.limits.
+		framebufferDepthSampleCounts;
 	if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
 	if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
 	if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-	if (counts & VK_SAMPLE_COUNT_8_BIT)  { return VK_SAMPLE_COUNT_8_BIT; }
-	if (counts & VK_SAMPLE_COUNT_4_BIT)  { return VK_SAMPLE_COUNT_4_BIT; }
-	if (counts & VK_SAMPLE_COUNT_2_BIT)  { return VK_SAMPLE_COUNT_2_BIT; }
+	if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
+	if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
+	if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
 
 	return VK_SAMPLE_COUNT_1_BIT;
 }
 
-VulkanContextCreator::VulkanContextCreator(VulkanInstance& vk, VulkanRenderDevice& dev, void* window, int screenWidth, int screenHeight,
-	const VulkanContextFeatures& ctxFeatures):
+VulkanContextCreator::VulkanContextCreator(VulkanInstance& vk, VulkanRenderDevice& dev, void* window, int screenWidth,
+                                           int screenHeight,
+                                           const VulkanContextFeatures& ctxFeatures):
 	instance(vk),
 	vkDev(dev)
 {
@@ -2766,7 +3032,7 @@ VulkanContextCreator::VulkanContextCreator(VulkanInstance& vk, VulkanRenderDevic
 	if (!setupDebugCallbacks(vk.instance, &vk.messenger, &vk.reportCallback))
 		exit(0);
 
-	if (glfwCreateWindowSurface(vk.instance, (GLFWwindow *)window, nullptr, &vk.surface))
+	if (glfwCreateWindowSurface(vk.instance, (GLFWwindow*)window, nullptr, &vk.surface))
 		exit(0);
 
 	if (!initVulkanRenderDevice3(vk, dev, screenWidth, screenHeight, ctxFeatures))
@@ -2782,7 +3048,8 @@ VulkanContextCreator::~VulkanContextCreator()
 RenderPass::RenderPass(VulkanRenderDevice& vkDev, bool useDepth, const RenderPassCreateInfo& ci):
 	info(ci)
 {
-	if (!createColorAndDepthRenderPass(vkDev, useDepth, &handle, ci)) {
+	if (!createColorAndDepthRenderPass(vkDev, useDepth, &handle, ci))
+	{
 		printf("Failed to create render pass\n");
 		exit(EXIT_FAILURE);
 	}
@@ -2801,7 +3068,8 @@ bool setVkObjectName(VulkanRenderDevice& vkDev, void* object, VkObjectType objTy
 	return (vkSetDebugUtilsObjectNameEXT(vkDev.device, &nameInfo) == VK_SUCCESS);
 }
 
-void updateTextureInDescriptorSetArray(VulkanRenderDevice& vkDev, VkDescriptorSet ds, VulkanTexture t, uint32_t textureIndex, uint32_t bindingIdx)
+void updateTextureInDescriptorSetArray(VulkanRenderDevice& vkDev, VkDescriptorSet ds, VulkanTexture t,
+                                       uint32_t textureIndex, uint32_t bindingIdx)
 {
 	const VkDescriptorImageInfo imageInfo = {
 		.sampler = t.sampler,

@@ -35,9 +35,11 @@ const uint32_t kScreenHeight = 720;
 
 GLFWwindow* window;
 
+// declare a Vulkan instance and render device objects
 VulkanInstance vk;
 VulkanRenderDevice vkDev;
 
+// declare all our "layer" renderers
 std::unique_ptr<ImGuiRenderer> imgui;
 std::unique_ptr<ModelRenderer> modelRenderer;
 std::unique_ptr<CubeRenderer> cubeRenderer;
@@ -46,9 +48,11 @@ std::unique_ptr<VulkanCanvas> canvas2d;
 std::unique_ptr<VulkanClear> clear;
 std::unique_ptr<VulkanFinish> finish;
 
+// create an FPS counter and charts (graphs)
 FramesPerSecondCounter fpsCounter(0.02f);
 LinearGraph fpsGraph;
 LinearGraph sineGraph(4096);
+
 
 struct MouseState
 {
@@ -56,16 +60,16 @@ struct MouseState
 	bool pressedLeft = false;
 } mouseState;
 
+// All camera-related objects should be defined here:
 glm::vec3 cameraPos(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraAngles(-45.0f, 0.0f, 0.0f);
-
 CameraPositioner_FirstPerson positioner_firstPerson(cameraPos, vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
-CameraPositioner_MoveTo      positioner_moveTo(cameraPos, cameraAngles);
+CameraPositioner_MoveTo positioner_moveTo(cameraPos, cameraAngles);
 Camera camera = Camera(positioner_firstPerson);
 
 // ImGUI stuff
 const char* cameraType = "FirstPerson";
-const char* comboBoxItems[] = { "FirstPerson", "MoveTo" };
+const char* comboBoxItems[] = {"FirstPerson", "MoveTo"};
 const char* currentComboBoxItem = cameraType;
 
 bool initVulkan()
@@ -80,15 +84,27 @@ bool initVulkan()
 	if (glfwCreateWindowSurface(vk.instance, window, nullptr, &vk.surface))
 		exit(EXIT_FAILURE);
 
-	if (!initVulkanRenderDevice(vk, vkDev, kScreenWidth, kScreenHeight, isDeviceSuitable, { .geometryShader = VK_TRUE }))
+	if (!initVulkanRenderDevice(vk, vkDev, kScreenWidth, kScreenHeight, isDeviceSuitable, {.geometryShader = VK_TRUE}))
 		exit(EXIT_FAILURE);
 
 	imgui = std::make_unique<ImGuiRenderer>(vkDev);
-	modelRenderer = std::make_unique<ModelRenderer>(vkDev, "data/rubber_duck/scene.gltf", "data/ch2_sample3_STB.jpg", (uint32_t)sizeof(glm::mat4));
-	cubeRenderer = std::make_unique<CubeRenderer>(vkDev, modelRenderer->getDepthTexture(), "data/piazza_bologni_1k.hdr");
+
+	// modelRenderer is initialized before other layers since it contains a depth buffer
+	modelRenderer = std::make_unique<ModelRenderer>(vkDev,
+	                                                "data/rubber_duck/scene.gltf",
+	                                                "data/ch2_sample3_STB.jpg",
+	                                                (uint32_t)sizeof(glm::mat4));
+
+	cubeRenderer = std::make_unique<CubeRenderer>(vkDev,
+	                                              modelRenderer->getDepthTexture(),
+	                                              "data/piazza_bologni_1k.hdr");
+
 	clear = std::make_unique<VulkanClear>(vkDev, modelRenderer->getDepthTexture());
 	finish = std::make_unique<VulkanFinish>(vkDev, modelRenderer->getDepthTexture());
-	canvas2d = std::make_unique<VulkanCanvas>(vkDev, VulkanImage{ .image = VK_NULL_HANDLE, .imageView = VK_NULL_HANDLE });
+
+	// The canvas2d object takes an empty depth texture to disable depth testing
+	canvas2d = std::make_unique<VulkanCanvas>(vkDev, VulkanImage{.image = VK_NULL_HANDLE, .imageView = VK_NULL_HANDLE});
+
 	canvas = std::make_unique<VulkanCanvas>(vkDev, modelRenderer->getDepthTexture());
 
 	return true;
@@ -109,6 +125,8 @@ void terminateVulkan()
 
 void reinitCamera()
 {
+	// 3D camera selection 
+
 	if (!strcmp(cameraType, "FirstPerson"))
 	{
 		camera = Camera(positioner_firstPerson);
@@ -126,6 +144,8 @@ void reinitCamera()
 
 void renderGUI(uint32_t imageIndex)
 {
+	// This function contains all the Dear ImGui user interface rendering for the specified swapchain image
+
 	EASY_FUNCTION();
 
 	int width, height;
@@ -135,6 +155,7 @@ void renderGUI(uint32_t imageIndex)
 	io.DisplaySize = ImVec2((float)width, (float)height);
 	ImGui::NewFrame();
 
+	// Render the FPS counter in a borderless ImGui window
 	const ImGuiWindowFlags flags =
 		ImGuiWindowFlags_NoTitleBar |
 		ImGuiWindowFlags_NoResize |
@@ -143,15 +164,16 @@ void renderGUI(uint32_t imageIndex)
 		ImGuiWindowFlags_NoSavedSettings |
 		ImGuiWindowFlags_NoInputs |
 		ImGuiWindowFlags_NoBackground;
-
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::Begin("Statistics", nullptr, flags);
 	ImGui::Text("FPS: %.2f", fpsCounter.getFPS());
 	ImGui::End();
 
+	// Render the camera controls window
 	ImGui::Begin("Camera Control", nullptr);
 	{
-		if (ImGui::BeginCombo("##combo", currentComboBoxItem)) // The second parameter is the label previewed before opening the combo.
+		if (ImGui::BeginCombo("##combo", currentComboBoxItem))
+		// The second parameter is the label previewed before opening the combo.
 		{
 			for (int n = 0; n < IM_ARRAYSIZE(comboBoxItems); n++)
 			{
@@ -161,13 +183,15 @@ void renderGUI(uint32_t imageIndex)
 					currentComboBoxItem = comboBoxItems[n];
 
 				if (isSelected)
-					ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+					ImGui::SetItemDefaultFocus();
+				// You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
 			}
 			ImGui::EndCombo();
 		}
 
 		if (!strcmp(cameraType, "MoveTo"))
 		{
+			// draw the ImGui sliders to select the camera position coordinates and orientation angles
 			if (ImGui::SliderFloat3("Position", glm::value_ptr(cameraPos), -10.0f, +10.0f))
 				positioner_moveTo.setDesiredPosition(cameraPos);
 			if (ImGui::SliderFloat3("Pitch/Pan/Roll", glm::value_ptr(cameraAngles), -90.0f, +90.0f))
@@ -178,22 +202,30 @@ void renderGUI(uint32_t imageIndex)
 		{
 			printf("Selected new camera type: %s\n", currentComboBoxItem);
 			cameraType = currentComboBoxItem;
+			// Reinitialize the camera if the camera mode has changed
 			reinitCamera();
 		}
 	}
+
+	// Finalize the ImGui rendering
 	ImGui::End();
 	ImGui::Render();
 
+	// update the Vulkan buffers before issuing any Vulkan drawing commands:
 	imgui->updateBuffers(vkDev, imageIndex, ImGui::GetDrawData());
 }
 
 void update3D(uint32_t imageIndex)
 {
+	// this function calculates the appropriate view and projection matrices for all objects and updates uniform buffers
+
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 	const float ratio = width / (float)height;
 
-	const mat4 m1 = glm::rotate(glm::translate(mat4(1.0f), vec3(0.f, 0.5f, -1.5f)) * glm::rotate(mat4(1.f), glm::pi<float>(), vec3(1, 0, 0)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+	const mat4 m1 = glm::rotate(
+		glm::translate(mat4(1.0f), vec3(0.f, 0.5f, -1.5f)) * glm::rotate(mat4(1.f), glm::pi<float>(), vec3(1, 0, 0)),
+		(float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 	const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
 	const mat4 view = camera.getViewMatrix();
@@ -211,7 +243,10 @@ void update3D(uint32_t imageIndex)
 
 void update2D(uint32_t imageIndex)
 {
+	// similar to update3D, but for the user interface and onscreen graph
+
 	canvas2d->clear();
+	// render both charts using VulkanCanvas l
 	sineGraph.renderGraph(*canvas2d.get(), vec4(0.0f, 1.0f, 0.0f, 1.0f));
 	fpsGraph.renderGraph(*canvas2d.get());
 	canvas2d->updateBuffer(vkDev, imageIndex);
@@ -219,11 +254,15 @@ void update2D(uint32_t imageIndex)
 
 void composeFrame(uint32_t imageIndex, const std::vector<RendererBase*>& renderers)
 {
+	// all the 2D, 3D, and user interface rendering data is updated
 	update3D(imageIndex);
 	renderGUI(imageIndex);
 	update2D(imageIndex);
 
 	EASY_BLOCK("FillCommandBuffers");
+
+	// begin to fill a new command buffer by iterating all the layer renderers and
+	// calling their fillCommandBuffer() virtual function
 
 	VkCommandBuffer commandBuffer = vkDev.commandBuffers[imageIndex];
 
@@ -250,14 +289,24 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 	EASY_FUNCTION();
 
 	uint32_t imageIndex = 0;
-	VkResult result = vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.semaphore, VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(vkDev.device,
+	                                        vkDev.swapchain,
+	                                        0,
+	                                        vkDev.semaphore,
+	                                        VK_NULL_HANDLE,
+	                                        &imageIndex);
 	VK_CHECK(vkResetCommandPool(vkDev.device, vkDev.commandPool, 0));
 
+	// Here, if the next swapchain image is not yet available, we should return and skip this
+	// frame. It might just be that our GPU is rendering frames slower than we are filling in the command buffers
 	if (result != VK_SUCCESS) return false;
 
 	composeFrame(imageIndex, renderers);
 
-	const VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }; // or even VERTEX_SHADER_STAGE
+	const VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	// or even VERTEX_SHADER_STAGE
+
+	// Submit the command buffer into the Vulkan graphics queue
 
 	const VkSubmitInfo si =
 	{
@@ -278,6 +327,8 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 		EASY_END_BLOCK;
 	}
 
+	// Present the results on the screen
+
 	const VkPresentInfoKHR pi =
 	{
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -295,6 +346,7 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 		EASY_END_BLOCK;
 	}
 
+	// Wait for the GPU to finish rendering
 	{
 		EASY_BLOCK("vkDeviceWaitIdle", profiler::colors::Red);
 		VK_CHECK(vkDeviceWaitIdle(vkDev.device));
@@ -384,16 +436,25 @@ int main()
 	initVulkan();
 
 	{
-		canvas->plane3d(vec3(0,+1.5,0), vec3(1,0,0), vec3(0,0,1), 40, 40, 10.0f, 10.0f, vec4(1,0,0,1), vec4(0,1,0,1));
+		canvas->plane3d(vec3(0, +1.5, 0), vec3(1, 0, 0), vec3(0, 0, 1), 40, 40, 10.0f, 10.0f, vec4(1, 0, 0, 1),
+		                vec4(0, 1, 0, 1));
 
-		for(size_t i = 0 ; i < vkDev.swapchainImages.size() ; i++)
+		for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 			canvas->updateBuffer(vkDev, i);
 	}
 
 	double timeStamp = glfwGetTime();
 	float deltaSeconds = 0.0f;
 
-	const std::vector<RendererBase*> renderers = { clear.get(), cubeRenderer.get(), modelRenderer.get(), canvas.get(), canvas2d.get(), imgui.get(), finish.get() };
+	const std::vector<RendererBase*> renderers = {
+		clear.get(),
+		cubeRenderer.get(),
+		modelRenderer.get(),
+		canvas.get(),
+		canvas2d.get(),
+		imgui.get(),
+		finish.get()
+	};
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -408,8 +469,11 @@ int main()
 		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
 		timeStamp = newTimeStamp;
 
+		// Once our frame composition is done, we can proceed with the frame rendering
+		// the function is invoked from the main loop using the list of layer renderers
 		const bool frameRendered = drawFrame(renderers);
 
+		// add points to the graph
 		if (fpsCounter.tick(deltaSeconds, frameRendered))
 		{
 			fpsGraph.addPoint(fpsCounter.getFPS());

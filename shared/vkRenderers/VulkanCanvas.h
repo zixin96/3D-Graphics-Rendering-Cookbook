@@ -8,19 +8,34 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 
-class VulkanCanvas: public RendererBase
+class VulkanCanvas : public RendererBase
 {
 public:
 	explicit VulkanCanvas(VulkanRenderDevice& vkDev, VulkanImage depth);
-	virtual ~VulkanCanvas();
+	~VulkanCanvas() override;
 
-	virtual void fillCommandBuffer(VkCommandBuffer commandBuffer, size_t currentImage) override;
+	void fillCommandBuffer(VkCommandBuffer commandBuffer, size_t currentImage) override;
 
 	void clear();
+
 	void line(const vec3& p1, const vec3& p2, const vec4& c);
-	void plane3d(const vec3& orig, const vec3& v1, const vec3& v2, int n1, int n2, float s1, float s2, const vec4& color, const vec4& outlineColor);
+
+	void plane3d(const vec3& o,
+	             const vec3& v1,
+	             const vec3& v2,
+	             int n1,
+	             int n2,
+	             float s1,
+	             float s2,
+	             const vec4& color,
+	             const vec4& outlineColor);
+
 	void updateBuffer(VulkanRenderDevice& vkDev, size_t currentImage);
-	void updateUniformBuffer(VulkanRenderDevice& vkDev, const glm::mat4& modelViewProj , float time, uint32_t currentImage);
+
+	void updateUniformBuffer(VulkanRenderDevice& vkDev,
+	                         const glm::mat4& modelViewProj,
+	                         float time,
+	                         uint32_t currentImage);
 
 private:
 	struct VertexData
@@ -39,10 +54,12 @@ private:
 
 	std::vector<VertexData> lines_;
 
-	// 7. Storage Buffer with index and vertex data
+	// storage buffer with index and vertex data
 	std::vector<VkBuffer> storageBuffer_;
 	std::vector<VkDeviceMemory> storageBufferMemory_;
 
+	// We need to define the maximum number of lines we may want to render. This is
+	// necessary to be able to pre-allocate GPU storage for our geometry data
 	static constexpr unsigned kMaxLinesCount = 65536;
 	static constexpr unsigned kMaxLinesDataSize = kMaxLinesCount * sizeof(VulkanCanvas::VertexData) * 2;
 };

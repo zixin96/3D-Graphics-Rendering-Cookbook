@@ -6,7 +6,7 @@
 #include <glm/ext.hpp>
 using glm::mat4;
 
-class CubeRenderer: public RendererBase
+class CubeRenderer : public RendererBase
 {
 public:
 	CubeRenderer(VulkanRenderDevice& vkDev, VulkanImage inDepthTexture, const char* textureFile);
@@ -17,8 +17,8 @@ public:
 	void updateUniformBuffer(VulkanRenderDevice& vkDev, uint32_t currentImage, const mat4& m);
 
 private:
-	VkSampler textureSampler;
-	VulkanImage texture;
+	VkSampler mTextureSampler;
+	VulkanImage mTexture;
 
 	bool createDescriptorSet(VulkanRenderDevice& vkDev);
 };

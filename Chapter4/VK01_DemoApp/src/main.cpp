@@ -336,6 +336,14 @@ int main()
 		window,
 		[](auto* window, double x, double y)
 		{
+			// Zixin: to enable mouse moving
+			// -------------------------------------------------
+			int width, height;
+			glfwGetFramebufferSize(window, &width, &height);
+			mouseState.pos.x = static_cast<float>(x / width);
+			mouseState.pos.y = static_cast<float>(y / height);
+			// -------------------------------------------------
+
 			ImGui::GetIO().MousePos = ImVec2((float)x, (float)y);
 		}
 	);

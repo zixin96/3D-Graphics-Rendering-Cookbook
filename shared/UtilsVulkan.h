@@ -33,8 +33,8 @@ struct VulkanRenderDevice final
 	uint32_t graphicsFamily;
 
 	VkSwapchainKHR swapchain;
-	VkSemaphore semaphore;
-	VkSemaphore renderSemaphore;
+	VkSemaphore imageAvailableSemaphore;
+	VkSemaphore renderCompleteSemaphore;
 
 	std::vector<VkImage> swapchainImages;
 	std::vector<VkImageView> swapchainImageViews;
@@ -339,8 +339,13 @@ void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image, VkFormat fo
 void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout,
                               VkImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevels = 1);
 
-bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
-                            std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures deviceFeatures);
+bool initVulkanRenderDevice(const VulkanInstance& vk,
+                            VulkanRenderDevice& vkDev,
+                            uint32_t width,
+                            uint32_t height,
+                            std::function<bool(VkPhysicalDevice)> selector,
+                            VkPhysicalDeviceFeatures deviceFeatures);
+
 bool initVulkanRenderDevice2(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
                              std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures2 deviceFeatures2);
 bool initVulkanRenderDevice3(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,

@@ -321,7 +321,7 @@ void terminateVulkan()
 bool drawOverlay()
 {
 	uint32_t imageIndex = 0;
-	if (vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.semaphore, VK_NULL_HANDLE, &imageIndex) != VK_SUCCESS)
+	if (vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex) != VK_SUCCESS)
 		return false;
 
 	VK_CHECK(vkResetCommandPool(vkDev.device, vkDev.commandPool, 0));
@@ -351,12 +351,12 @@ bool drawOverlay()
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.semaphore,
+		.pWaitSemaphores = &vkDev.imageAvailableSemaphore,
 		.pWaitDstStageMask = waitStages,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &vkDev.commandBuffers[imageIndex],
 		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &vkDev.renderSemaphore
+		.pSignalSemaphores = &vkDev.renderCompleteSemaphore
 	};
 
 	VK_CHECK(vkQueueSubmit(vkDev.graphicsQueue, 1, &si, nullptr));
@@ -366,7 +366,7 @@ bool drawOverlay()
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.renderSemaphore,
+		.pWaitSemaphores = &vkDev.renderCompleteSemaphore,
 		.swapchainCount = 1,
 		.pSwapchains = &vkDev.swapchain,
 		.pImageIndices = &imageIndex

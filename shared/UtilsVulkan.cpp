@@ -511,8 +511,13 @@ VkResult createDevice2WithCompute(VkPhysicalDevice physicalDevice, VkPhysicalDev
 	return vkCreateDevice(physicalDevice, &ci, nullptr, device);
 }
 
-VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
-                         uint32_t graphicsFamily, uint32_t width, uint32_t height, VkSwapchainKHR* swapchain,
+VkResult createSwapchain(VkDevice device,
+                         VkPhysicalDevice physicalDevice,
+                         VkSurfaceKHR surface,
+                         uint32_t graphicsFamily,
+                         uint32_t width,
+                         uint32_t height,
+                         VkSwapchainKHR* swapchain,
                          bool supportScreenshots)
 {
 	auto swapchainSupport = querySwapchainSupport(physicalDevice, surface);
@@ -576,44 +581,80 @@ VkResult createSemaphore(VkDevice device, VkSemaphore* outSemaphore)
 	return vkCreateSemaphore(device, &ci, nullptr, outSemaphore);
 }
 
-bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint32_t width, uint32_t height,
-                            std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDeviceFeatures deviceFeatures)
+/**
+ * \brief initializes VulkanRenderDevice
+ * \param vk VulkanInstance that is needed for initializing VulkanRenderDevice
+ * \param vkDev The output handle for VulkanRenderDevice
+ * \param width The window width 
+ * \param height The window height 
+ * \param selector A physical device selector that is used to find suitable physical devices
+ * \param deviceFeatures Requested device features
+ * \return true if successful, otherwise, it will abort with EXIT_FAILURE
+ */
+bool initVulkanRenderDevice(const VulkanInstance& vk,
+                            VulkanRenderDevice& vkDev,
+                            uint32_t width,
+                            uint32_t height,
+                            std::function<bool(VkPhysicalDevice)> selector,
+                            VkPhysicalDeviceFeatures deviceFeatures)
 {
 	vkDev.framebufferWidth = width;
 	vkDev.framebufferHeight = height;
 
+	// initializes VkPhysicalDevice inside VulkanRenderDevice struct
 	VK_CHECK(findSuitablePhysicalDevice(vk.instance, selector, &vkDev.physicalDevice));
+
 	vkDev.graphicsFamily = findQueueFamilies(vkDev.physicalDevice, VK_QUEUE_GRAPHICS_BIT);
+
+	// initializes VkDevice inside VulkanRenderDevice struct
 	VK_CHECK(createDevice(vkDev.physicalDevice, deviceFeatures, vkDev.graphicsFamily, &vkDev.device));
 
+	// initializes VkQueue (graphics) inside VulkanRenderDevice struct
 	vkGetDeviceQueue(vkDev.device, vkDev.graphicsFamily, 0, &vkDev.graphicsQueue);
+
 	if (vkDev.graphicsQueue == nullptr)
 		exit(EXIT_FAILURE);
 
+	// is presentation supported? 
 	VkBool32 presentSupported = 0;
 	vkGetPhysicalDeviceSurfaceSupportKHR(vkDev.physicalDevice, vkDev.graphicsFamily, vk.surface, &presentSupported);
 	if (!presentSupported)
 		exit(EXIT_FAILURE);
 
-	VK_CHECK(
-		createSwapchain(vkDev.device, vkDev.physicalDevice, vk.surface, vkDev.graphicsFamily, width, height, &vkDev.
-			swapchain));
-	const size_t imageCount = createSwapchainImages(vkDev.device, vkDev.swapchain, vkDev.swapchainImages,
+	// initializes VkSwapchainKHR inside VulkanRenderDevice struct
+	VK_CHECK(createSwapchain(
+		vkDev.device,
+		vkDev.physicalDevice,
+		vk.surface,
+		vkDev.graphicsFamily,
+		width,
+		height,
+		&vkDev.swapchain));
+
+	// initializes std::vector<VkImage> (swapchain) and std::vector<VkImageView> (swapchain) inside VulkanRenderDevice struct
+	const size_t imageCount = createSwapchainImages(vkDev.device,
+	                                                vkDev.swapchain,
+	                                                vkDev.swapchainImages,
 	                                                vkDev.swapchainImageViews);
+
+	// initializes std::vector<VkCommandBuffer> inside VulkanRenderDevice struct
+	// we need to allocate one command buffer per swap chain image
 	vkDev.commandBuffers.resize(imageCount);
 
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderSemaphore));
+	// initializes the required VkSemaphore inside VulkanRenderDevice struct
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.imageAvailableSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderCompleteSemaphore));
 
+	// initializes VkCommandPool inside VulkanRenderDevice struct
 	const VkCommandPoolCreateInfo cpi =
 	{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 		.flags = 0,
 		.queueFamilyIndex = vkDev.graphicsFamily
 	};
-
 	VK_CHECK(vkCreateCommandPool(vkDev.device, &cpi, nullptr, &vkDev.commandPool));
 
+	// allocates std::vector<VkCommandBuffer> inside VulkanRenderDevice struct
 	const VkCommandBufferAllocateInfo ai =
 	{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -622,8 +663,8 @@ bool initVulkanRenderDevice(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint3
 		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		.commandBufferCount = static_cast<uint32_t>(vkDev.swapchainImages.size()),
 	};
-
 	VK_CHECK(vkAllocateCommandBuffers(vkDev.device, &ai, &vkDev.commandBuffers[0]));
+
 	return true;
 }
 
@@ -701,8 +742,8 @@ bool initVulkanRenderDeviceWithCompute(VulkanInstance& vk, VulkanRenderDevice& v
 	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.imageAvailableSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderCompleteSemaphore));
 
 	const VkCommandPoolCreateInfo cpi =
 	{
@@ -779,8 +820,8 @@ bool initVulkanRenderDevice2(VulkanInstance& vk, VulkanRenderDevice& vkDev, uint
 	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.imageAvailableSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderCompleteSemaphore));
 
 	const VkCommandPoolCreateInfo cpi =
 	{
@@ -840,8 +881,8 @@ bool initVulkanRenderDevice2WithCompute(VulkanInstance& vk, VulkanRenderDevice& 
 	                                                vkDev.swapchainImageViews);
 	vkDev.commandBuffers.resize(imageCount);
 
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.semaphore));
-	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.imageAvailableSemaphore));
+	VK_CHECK(createSemaphore(vkDev.device, &vkDev.renderCompleteSemaphore));
 
 	const VkCommandPoolCreateInfo cpi =
 	{
@@ -939,8 +980,8 @@ void destroyVulkanRenderDevice(VulkanRenderDevice& vkDev)
 
 	vkDestroyCommandPool(vkDev.device, vkDev.commandPool, nullptr);
 
-	vkDestroySemaphore(vkDev.device, vkDev.semaphore, nullptr);
-	vkDestroySemaphore(vkDev.device, vkDev.renderSemaphore, nullptr);
+	vkDestroySemaphore(vkDev.device, vkDev.imageAvailableSemaphore, nullptr);
+	vkDestroySemaphore(vkDev.device, vkDev.renderCompleteSemaphore, nullptr);
 
 	if (vkDev.useCompute)
 	{
@@ -1024,6 +1065,11 @@ bool createDescriptorPool(VulkanRenderDevice& vkDev, uint32_t uniformBufferCount
 	return (vkCreateDescriptorPool(vkDev.device, &poolInfo, nullptr, descriptorPool) == VK_SUCCESS);
 }
 
+/**
+ * \brief Is the physical device suitable? 
+ * \param device The physical device
+ * \return true if suitable, otherwise false
+ */
 bool isDeviceSuitable(VkPhysicalDevice device)
 {
 	VkPhysicalDeviceProperties deviceProperties;
@@ -1089,7 +1135,8 @@ uint32_t chooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities)
 	return imageCountExceeded ? capabilities.maxImageCount : imageCount;
 }
 
-VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<bool(VkPhysicalDevice)> selector,
+VkResult findSuitablePhysicalDevice(VkInstance instance,
+                                    std::function<bool(VkPhysicalDevice)> selector,
                                     VkPhysicalDevice* physicalDevice)
 {
 	uint32_t deviceCount = 0;

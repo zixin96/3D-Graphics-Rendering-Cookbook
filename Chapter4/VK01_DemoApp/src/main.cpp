@@ -80,18 +80,27 @@ bool initVulkan()
 {
 	EASY_FUNCTION();
 
-	// initializes VulkanInstance::VkInstance
+	// initializes VkInstance inside VulkanInstance struct
 	createInstance(&vk.instance);
 
-	// initializes VulkanInstance::VkDebugUtilsMessengerEXT and VulkanInstance::reportCallback
+	// initializes VkDebugUtilsMessengerEXT and VkDebugReportCallbackEXT inside VulkanInstance struct
 	if (!setupDebugCallbacks(vk.instance, &vk.messenger, &vk.reportCallback))
 		exit(EXIT_FAILURE);
 
+	// initializes VkSurfaceKHR inside VulkanInstance struct
 	if (glfwCreateWindowSurface(vk.instance, window, nullptr, &vk.surface))
 		exit(EXIT_FAILURE);
 
-	if (!initVulkanRenderDevice(vk, vkDev, kScreenWidth, kScreenHeight, isDeviceSuitable, {.geometryShader = VK_TRUE}))
+	// initializes VulkanRenderDevice
+	if (!initVulkanRenderDevice(vk,
+	                            vkDev,
+	                            kScreenWidth,
+	                            kScreenHeight,
+	                            isDeviceSuitable,
+	                            {.geometryShader = VK_TRUE}))
+	{
 		exit(EXIT_FAILURE);
+	}
 
 	imgui = std::make_unique<ImGuiRenderer>(vkDev);
 
@@ -298,7 +307,7 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 	VkResult result = vkAcquireNextImageKHR(vkDev.device,
 	                                        vkDev.swapchain,
 	                                        0,
-	                                        vkDev.semaphore,
+	                                        vkDev.imageAvailableSemaphore,
 	                                        VK_NULL_HANDLE,
 	                                        &imageIndex);
 	VK_CHECK(vkResetCommandPool(vkDev.device, vkDev.commandPool, 0));
@@ -319,12 +328,12 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.semaphore,
+		.pWaitSemaphores = &vkDev.imageAvailableSemaphore,
 		.pWaitDstStageMask = waitStages,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &vkDev.commandBuffers[imageIndex],
 		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &vkDev.renderSemaphore
+		.pSignalSemaphores = &vkDev.renderCompleteSemaphore
 	};
 
 	{
@@ -340,7 +349,7 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.renderSemaphore,
+		.pWaitSemaphores = &vkDev.renderCompleteSemaphore,
 		.swapchainCount = 1,
 		.pSwapchains = &vkDev.swapchain,
 		.pImageIndices = &imageIndex

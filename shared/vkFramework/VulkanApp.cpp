@@ -56,7 +56,7 @@ GLFWwindow* initVulkanApp(int width, int height, Resolution* resolution)
 bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& updateBuffersFunc, const std::function<void(VkCommandBuffer, uint32_t)>& composeFrameFunc)
 {
 	uint32_t imageIndex = 0;
-	VkResult result = vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.semaphore, VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 	VK_CHECK(vkResetCommandPool(vkDev.device, vkDev.commandPool, 0));
 
 	if (result != VK_SUCCESS) return false;
@@ -86,12 +86,12 @@ bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& u
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.semaphore,
+		.pWaitSemaphores = &vkDev.imageAvailableSemaphore,
 		.pWaitDstStageMask = waitStages,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &vkDev.commandBuffers[imageIndex],
 		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &vkDev.renderSemaphore
+		.pSignalSemaphores = &vkDev.renderCompleteSemaphore
 	};
 
 	VK_CHECK(vkQueueSubmit(vkDev.graphicsQueue, 1, &si, nullptr));
@@ -101,7 +101,7 @@ bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& u
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.renderSemaphore,
+		.pWaitSemaphores = &vkDev.renderCompleteSemaphore,
 		.swapchainCount = 1,
 		.pSwapchains = &vkDev.swapchain,
 		.pImageIndices = &imageIndex

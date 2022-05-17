@@ -6,17 +6,32 @@
 
 #include <meshoptimizer.h>
 
+// TODO: There is no global verbose flag as mentioned at page 246
+
 MeshData g_meshData;
 
+// To fill MeshData's index/vertex fields,
+// we require two counters to track offsets of index and vertex mesh data inside the file
 uint32_t g_indexOffset = 0;
 uint32_t g_vertexOffset = 0;
 
+// TODO: There are no flags controlling whether we need to export texture coordinates and normal vectors as mentioned at page 246
+
+// By default, we export vertex coordinates (3), normal (3), and texture coordinates (2).
+// Therefore, 3+3+2 elements are specified here 
 constexpr uint32_t g_numElementsToStore = 3 + 3 + 2;
 
+// TODO: Make it so that we can parse command-line arguments to check whether texture coordinates or normal vectors are needed
+
+// By default, the mesh scale is 0.01
 float g_meshScale = 0.01f;
+
+// By default, we don't calculate LODs
 bool g_calculateLODs = false;
 
-void processLods(std::vector<uint32_t>& indices, std::vector<float>& vertices, std::vector<std::vector<uint32_t>>& outLods)
+void processLods(std::vector<uint32_t>& indices,
+                 std::vector<float>& vertices,
+                 std::vector<std::vector<uint32_t>>& outLods)
 {
 	size_t verticesCountIn = vertices.size() / 2;
 	size_t targetIndicesCount = indices.size();
@@ -27,7 +42,7 @@ void processLods(std::vector<uint32_t>& indices, std::vector<float>& vertices, s
 
 	outLods.push_back(indices);
 
-	while ( targetIndicesCount > 1024 && LOD < 8 )
+	while (targetIndicesCount > 1024 && LOD < 8)
 	{
 		targetIndicesCount = indices.size() / 2;
 
@@ -37,8 +52,8 @@ void processLods(std::vector<uint32_t>& indices, std::vector<float>& vertices, s
 			indices.data(),
 			indices.data(), (uint32_t)indices.size(),
 			vertices.data(), verticesCountIn,
-			sizeof( float ) * 3,
-			targetIndicesCount, 0.02f );
+			sizeof(float) * 3,
+			targetIndicesCount, 0.02f);
 
 		// cannot simplify further
 		if (static_cast<size_t>(numOptIndices * 1.1f) > indices.size())
@@ -114,8 +129,8 @@ Mesh convertAIMesh(const aiMesh* m)
 		.indexOffset = g_indexOffset,
 		.vertexOffset = g_vertexOffset,
 		.vertexCount = m->mNumVertices,
-		.streamOffset = { g_vertexOffset * streamElementSize },
-		.streamElementSize = { streamElementSize }
+		.streamOffset = {g_vertexOffset * streamElementSize},
+		.streamElementSize = {streamElementSize}
 	};
 
 	for (size_t i = 0; i != m->mNumFaces; i++)
@@ -134,9 +149,9 @@ Mesh convertAIMesh(const aiMesh* m)
 	printf("\nCalculated LOD count: %u\n", (unsigned)outLods.size());
 
 	uint32_t numIndices = 0;
-	for (size_t l = 0 ; l < outLods.size() ; l++)
+	for (size_t l = 0; l < outLods.size(); l++)
 	{
-		for (size_t i = 0 ; i < outLods[l].size() ; i++)
+		for (size_t i = 0; i < outLods[l].size(); i++)
 			g_meshData.indexData_.push_back(outLods[l][i]);
 
 		result.lodOffset[l] = numIndices;
@@ -146,7 +161,7 @@ Mesh convertAIMesh(const aiMesh* m)
 	result.lodOffset[outLods.size()] = numIndices;
 	result.lodCount = (uint32_t)outLods.size();
 
-	g_indexOffset  += numIndices;
+	g_indexOffset += numIndices;
 	g_vertexOffset += m->mNumVertices;
 
 	return result;
@@ -195,9 +210,9 @@ int main()
 
 	std::vector<DrawData> grid;
 	g_vertexOffset = 0;
-	for (auto i = 0 ; i < g_meshData.meshes_.size() ; i++)
+	for (auto i = 0; i < g_meshData.meshes_.size(); i++)
 	{
-		grid.push_back(DrawData {
+		grid.push_back(DrawData{
 			.meshIndex = (uint32_t)i,
 			.materialIndex = 0,
 			.LOD = 0,

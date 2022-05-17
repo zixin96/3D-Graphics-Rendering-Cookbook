@@ -75,8 +75,17 @@ struct DrawData
 	uint32_t transformIndex;
 };
 
+/**
+ * \brief This struct contains the actual mesh descriptions and mesh geometry data (and bounding box)
+ */
 struct MeshData
 {
+	/*
+		We cannot output converted meshes one by one, at least not in a single-pass tool,
+		because we do not know the total size of the data in advance.
+		So, we allocate in-memory storage for all the data and then write these data blobs into the output file.
+	*/
+
 	std::vector<uint32_t> indexData_;
 	std::vector<float> vertexData_;
 	std::vector<Mesh> meshes_;

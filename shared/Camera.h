@@ -21,10 +21,11 @@ class Camera final
 public:
 	explicit Camera(CameraPositionerInterface& positioner)
 		: positioner_(&positioner)
-	{}
+	{
+	}
 
 	Camera(const Camera&) = default;
-	Camera& operator = (const Camera&) = default;
+	Camera& operator =(const Camera&) = default;
 
 	glm::mat4 getViewMatrix() const { return positioner_->getViewMatrix(); }
 	glm::vec3 getPosition() const { return positioner_->getPosition(); }
@@ -33,15 +34,17 @@ private:
 	const CameraPositionerInterface* positioner_;
 };
 
-class CameraPositioner_FirstPerson final: public CameraPositionerInterface
+class CameraPositioner_FirstPerson final : public CameraPositionerInterface
 {
 public:
 	CameraPositioner_FirstPerson() = default;
+
 	CameraPositioner_FirstPerson(const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up)
-	: cameraPosition_(pos)
-	, cameraOrientation_(glm::lookAt(pos, target, up))
-	, up_(up)
-	{}
+		: cameraPosition_(pos)
+		  , cameraOrientation_(glm::lookAt(pos, target, up))
+		  , up_(up)
+	{
+	}
 
 	void update(double deltaSeconds, const glm::vec2& mousePos, bool mousePressed)
 	{
@@ -109,6 +112,10 @@ public:
 
 	void resetMousePosition(const glm::vec2& p) { mousePos_ = p; };
 
+	/**
+	 * \brief Reorient the camera up vector to the world up vector
+	 * \param up The world up vector
+	 */
 	void setUpVector(const glm::vec3& up)
 	{
 		const glm::mat4 view = getViewMatrix();
@@ -116,7 +123,8 @@ public:
 		cameraOrientation_ = glm::lookAt(cameraPosition_, cameraPosition_ + dir, up);
 	}
 
-	inline void lookAt(const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up) {
+	inline void lookAt(const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up)
+	{
 		cameraPosition_ = pos;
 		cameraOrientation_ = glm::lookAt(pos, target, up);
 	}
@@ -154,10 +162,11 @@ class CameraPositioner_MoveTo final : public CameraPositionerInterface
 public:
 	CameraPositioner_MoveTo(const glm::vec3& pos, const glm::vec3& angles)
 		: positionCurrent_(pos)
-		, positionDesired_(pos)
-		, anglesCurrent_(angles)
-		, anglesDesired_(angles)
-	{}
+		  , positionDesired_(pos)
+		  , anglesCurrent_(angles)
+		  , anglesDesired_(angles)
+	{
+	}
 
 	void update(float deltaSeconds, const glm::vec2& mousePos, bool mousePressed)
 	{

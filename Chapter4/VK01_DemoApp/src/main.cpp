@@ -72,12 +72,18 @@ const char* cameraType = "FirstPerson";
 const char* comboBoxItems[] = {"FirstPerson", "MoveTo"};
 const char* currentComboBoxItem = cameraType;
 
+/**
+ * \brief Initializes all necessary Vulkan components 
+ * \return true if successful, otherwise, it will abort with EXIT_FAILURE
+ */
 bool initVulkan()
 {
 	EASY_FUNCTION();
 
+	// initializes VulkanInstance::VkInstance
 	createInstance(&vk.instance);
 
+	// initializes VulkanInstance::VkDebugUtilsMessengerEXT and VulkanInstance::reportCallback
 	if (!setupDebugCallbacks(vk.instance, &vk.messenger, &vk.reportCallback))
 		exit(EXIT_FAILURE);
 
@@ -393,36 +399,46 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
+	// sets the cursor position callback
 	glfwSetCursorPosCallback(
 		window,
 		[](auto* window, double x, double y)
 		{
-			// Zixin: to enable mouse moving
-			// -------------------------------------------------
+			// route the normalized GLFW mouse position into mouseState struct (so that we can look around using mouse)
+			// which will later be passed into Camera::update 
+
+			// Notice that we convert window pixel coordinates into normalized [0,1] coordinates
 			int width, height;
 			glfwGetFramebufferSize(window, &width, &height);
 			mouseState.pos.x = static_cast<float>(x / width);
 			mouseState.pos.y = static_cast<float>(y / height);
-			// -------------------------------------------------
 
-			// TODO: Why do we need this?
+			// We must route GLFW mouse position into ImGui so that we can interact IMGUI window with the mouse
 			ImGui::GetIO().MousePos = ImVec2((float)x, (float)y);
 		}
 	);
 
+	// sets the mouse button callback
 	glfwSetMouseButtonCallback(
 		window,
 		[](auto* window, int button, int action, int mods)
 		{
+			// route the mouse button events into ImGui so that we can interact IMGUI window with the mouse clicks 
 			auto& io = ImGui::GetIO();
+			// TODO: If right clicking doesn't work, check back here.
+			// const int idx = button == GLFW_MOUSE_BUTTON_LEFT ? 0 : button == GLFW_MOUSE_BUTTON_RIGHT ? 1 : 2;
 			const int idx = button == GLFW_MOUSE_BUTTON_LEFT ? 0 : button == GLFW_MOUSE_BUTTON_RIGHT ? 2 : 1;
 			io.MouseDown[idx] = action == GLFW_PRESS;
 
+			// route the mouse button event into mouseState struct (so that we can look around using mouse)
 			if (button == GLFW_MOUSE_BUTTON_LEFT)
+			{
 				mouseState.pressedLeft = action == GLFW_PRESS;
+			}
 		}
 	);
 
+	// sets the key callback
 	glfwSetKeyCallback(
 		window,
 		[](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -430,6 +446,8 @@ int main()
 			const bool pressed = action != GLFW_RELEASE;
 			if (key == GLFW_KEY_ESCAPE && pressed)
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+			// handles keyboard input for camera movement
 			if (key == GLFW_KEY_W)
 				positioner_firstPerson.movement_.forward_ = pressed;
 			if (key == GLFW_KEY_S)
@@ -439,7 +457,10 @@ int main()
 			if (key == GLFW_KEY_D)
 				positioner_firstPerson.movement_.right_ = pressed;
 			if (key == GLFW_KEY_SPACE)
+			{
+				// reorient the camera up vector to the world (0, 1, 0) vector
 				positioner_firstPerson.setUpVector(vec3(0.0f, 1.0f, 0.0f));
+			}
 		}
 	);
 

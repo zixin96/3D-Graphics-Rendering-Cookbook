@@ -31,6 +31,12 @@ using glm::vec2;
 #include <cstdio>
 #include <cstdlib>
 
+/**
+ * \brief The internal function that will be called from macros like VK_CHECK
+ * \param check The flag that determines if this check is passed or not
+ * \param fileName The file that causes the error
+ * \param lineNumber The line number that cause the error
+ */
 void CHECK(bool check, const char* fileName, int lineNumber)
 {
 	if (!check)
@@ -41,28 +47,23 @@ void CHECK(bool check, const char* fileName, int lineNumber)
 	}
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT Severity,
-	VkDebugUtilsMessageTypeFlagsEXT Type,
-	const VkDebugUtilsMessengerCallbackDataEXT* CallbackData,
-	void* UserData
-)
+static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT Severity,
+                                                          VkDebugUtilsMessageTypeFlagsEXT Type,
+                                                          const VkDebugUtilsMessengerCallbackDataEXT* CallbackData,
+                                                          void* UserData)
 {
 	printf("Validation layer: %s\n", CallbackData->pMessage);
 	return VK_FALSE;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback
-(
-	VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objectType,
-	uint64_t object,
-	size_t location,
-	int32_t messageCode,
-	const char* pLayerPrefix,
-	const char* pMessage,
-	void* UserData
-)
+static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback(VkDebugReportFlagsEXT flags,
+                                                                VkDebugReportObjectTypeEXT objectType,
+                                                                uint64_t object,
+                                                                size_t location,
+                                                                int32_t messageCode,
+                                                                const char* pLayerPrefix,
+                                                                const char* pMessage,
+                                                                void* UserData)
 {
 	// https://github.com/zeux/niagara/blob/master/src/device.cpp   [ignoring performance warnings]
 	// This silences warnings like "For optimal performance image layout should be VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL instead of GENERAL."
@@ -73,38 +74,56 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback
 	return VK_FALSE;
 }
 
-bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger,
+/**
+ * \brief initializes debug messenger and report call back
+ * \param instance The instance the messenger will be used with
+ * \param messenger The output VkDebugUtilsMessengerEXT handle
+ * \param reportCallback The output VkDebugReportCallbackEXT handle
+ * \return true if successful, otherwise, it will abort with EXIT_FAILURE
+ */
+bool setupDebugCallbacks(VkInstance instance,
+                         VkDebugUtilsMessengerEXT* messenger,
                          VkDebugReportCallbackEXT* reportCallback)
 {
 	{
 		const VkDebugUtilsMessengerCreateInfoEXT ci = {
 			.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+			// which severity of event(s) will cause this callback to be called
 			.messageSeverity =
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+			// specifying which type of event(s) will cause this callback to be called
 			.messageType =
 			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
 			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
 			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+			// the application callback function to call
 			.pfnUserCallback = &VulkanDebugCallback,
+			// user data to be passed to the callback
 			.pUserData = nullptr
 		};
 
+		// Create a debug messenger object
 		VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance, &ci, nullptr, messenger));
 	}
+
 	{
 		const VkDebugReportCallbackCreateInfoEXT ci = {
 			.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
 			.pNext = nullptr,
+			//  specifying which event(s) will cause this callback to be called
 			.flags =
 			VK_DEBUG_REPORT_WARNING_BIT_EXT |
 			VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
 			VK_DEBUG_REPORT_ERROR_BIT_EXT /*|
 			VK_DEBUG_REPORT_DEBUG_BIT_EXT*/,
+			// the application callback function to call
 			.pfnCallback = &VulkanDebugReportCallback,
+			// user data to be passed to the callback
 			.pUserData = nullptr
 		};
 
+		//  Create a debug report callback object
 		VK_CHECK(vkCreateDebugReportCallbackEXT(instance, &ci, nullptr, reportCallback));
 	}
 
@@ -249,6 +268,10 @@ VkResult createShaderModule(VkDevice device, ShaderModule* shader, const char* f
 	return vkCreateShaderModule(device, &createInfo, nullptr, &shader->shaderModule);
 }
 
+/**
+ * \brief initializes VkInstance
+ * \param instance The output VkInstance handle
+ */
 void createInstance(VkInstance* instance)
 {
 	// https://vulkan.lunarg.com/doc/view/1.1.108.0/windows/validation_layers.html
@@ -308,6 +331,7 @@ VkResult createDevice(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures 
 	const std::vector<const char*> extensions =
 	{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		// fix (draw parameters) validation error 
 		VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME
 	};
 

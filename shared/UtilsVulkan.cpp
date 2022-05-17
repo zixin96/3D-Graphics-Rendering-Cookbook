@@ -99,8 +99,8 @@ bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenge
 			.flags =
 			VK_DEBUG_REPORT_WARNING_BIT_EXT |
 			VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-			VK_DEBUG_REPORT_ERROR_BIT_EXT |
-			VK_DEBUG_REPORT_DEBUG_BIT_EXT,
+			VK_DEBUG_REPORT_ERROR_BIT_EXT /*|
+			VK_DEBUG_REPORT_DEBUG_BIT_EXT*/,
 			.pfnCallback = &VulkanDebugReportCallback,
 			.pUserData = nullptr
 		};
@@ -307,7 +307,8 @@ VkResult createDevice(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures 
 {
 	const std::vector<const char*> extensions =
 	{
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME
 	};
 
 	const float queuePriority = 1.0f;

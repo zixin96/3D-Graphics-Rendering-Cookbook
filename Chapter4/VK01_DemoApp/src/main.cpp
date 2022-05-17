@@ -30,8 +30,8 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 
-const uint32_t kScreenWidth = 1280;
-const uint32_t kScreenHeight = 720;
+const uint32_t kScreenWidth = 1000;
+const uint32_t kScreenHeight = 1000;
 
 GLFWwindow* window;
 
@@ -358,25 +358,34 @@ bool drawFrame(const std::vector<RendererBase*>& renderers)
 
 int main()
 {
+	// initialize profiler
 	EASY_PROFILER_ENABLE;
 	EASY_MAIN_THREAD;
 
+	// initializes the glslang compiler
 	glslang_initialize_process();
 
+	// initializes the Volk library
 	volkInitialize();
 
+	// initializes GLFW
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 
+	// is Vulkan "minimally" available? 
 	if (!glfwVulkanSupported())
 		exit(EXIT_FAILURE);
 
+	// disable any OpenGL context creation
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	// disable resized windows
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
+	// set up the data structures that are needed to sustain an ImGui context
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 
+	// create GLFW window
 	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "VulkanApp", nullptr, nullptr);
 	if (!window)
 	{
@@ -396,6 +405,7 @@ int main()
 			mouseState.pos.y = static_cast<float>(y / height);
 			// -------------------------------------------------
 
+			// TODO: Why do we need this?
 			ImGui::GetIO().MousePos = ImVec2((float)x, (float)y);
 		}
 	);

@@ -20,7 +20,7 @@ struct MouseState
 	bool pressedLeft = false;
 } mouseState;
 
-CameraPositioner_FirstPerson positioner( vec3(0.0f, 0.5f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+CameraPositioner_FirstPerson positioner(vec3(0.0f, 0.5f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
 Camera camera(positioner);
 
 int main(void)
@@ -113,7 +113,7 @@ int main(void)
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 		const mat4 view = camera.getViewMatrix();
 
-		const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(camera.getPosition(), 1.0f) };
+		const PerFrameData perFrameData = {.view = view, .proj = p, .cameraPos = glm::vec4(camera.getPosition(), 1.0f)};
 		glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
 
 		progGrid.useProgram();

@@ -48,13 +48,16 @@ public:
 
 		initDebug();
 	}
+
 	~GLApp()
 	{
 		glfwDestroyWindow(window_);
 		glfwTerminate();
 	}
+
 	GLFWwindow* getWindow() const { return window_; }
 	float getDeltaSeconds() const { return deltaSeconds_; }
+
 	void swapBuffers()
 	{
 		glfwSwapBuffers(window_);

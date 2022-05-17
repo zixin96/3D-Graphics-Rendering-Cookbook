@@ -261,7 +261,7 @@ void update2D(uint32_t imageIndex)
 	// similar to update3D, but for the user interface and onscreen graph
 
 	canvas2d->clear();
-	// render both charts using VulkanCanvas l
+	// render both charts using VulkanCanvas 
 	sineGraph.renderGraph(*canvas2d.get(), vec4(0.0f, 1.0f, 0.0f, 1.0f));
 	fpsGraph.renderGraph(*canvas2d.get());
 	canvas2d->updateBuffer(vkDev, imageIndex);

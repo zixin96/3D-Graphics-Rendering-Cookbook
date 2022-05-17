@@ -54,12 +54,12 @@ MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 
 void saveMeshData(const char* fileName, const MeshData& m)
 {
-	FILE *f = fopen(fileName, "wb");
+	FILE* f = fopen(fileName, "wb");
 
 	const MeshFileHeader header = {
 		.magicValue = 0x12345678,
 		.meshCount = (uint32_t)m.meshes_.size(),
-		.dataBlockStartOffset = (uint32_t )(sizeof(MeshFileHeader) + m.meshes_.size() * sizeof(Mesh)),
+		.dataBlockStartOffset = (uint32_t)(sizeof(MeshFileHeader) + m.meshes_.size() * sizeof(Mesh)),
 		.indexDataSize = (uint32_t)(m.indexData_.size() * sizeof(uint32_t)),
 		.vertexDataSize = (uint32_t)(m.vertexData_.size() * sizeof(float))
 	};
@@ -114,25 +114,26 @@ void loadBoundingBoxes(const char* fileName, std::vector<BoundingBox>& boxes)
 MeshFileHeader mergeMeshData(MeshData& m, const std::vector<MeshData*> md)
 {
 	uint32_t totalVertexDataSize = 0;
-	uint32_t totalIndexDataSize  = 0;
+	uint32_t totalIndexDataSize = 0;
 
 	uint32_t offs = 0;
-	for (const MeshData* i: md)
+	for (const MeshData* i : md)
 	{
 		mergeVectors(m.indexData_, i->indexData_);
 		mergeVectors(m.vertexData_, i->vertexData_);
 		mergeVectors(m.meshes_, i->meshes_);
 		mergeVectors(m.boxes_, i->boxes_);
 
-		uint32_t vtxOffset = totalVertexDataSize / 8;  /* 8 is the number of per-vertex attributes: position, normal + UV */
+		uint32_t vtxOffset = totalVertexDataSize / 8;
+		/* 8 is the number of per-vertex attributes: position, normal + UV */
 
-		for (size_t j = 0 ; j < (uint32_t)i->meshes_.size() ; j++)
+		for (size_t j = 0; j < (uint32_t)i->meshes_.size(); j++)
 			// m.vertexCount, m.lodCount and m.streamCount do not change
 			// m.vertexOffset also does not change, because vertex offsets are local (i.e., baked into the indices)
 			m.meshes_[offs + j].indexOffset += totalIndexDataSize;
 
 		// shift individual indices
-		for(size_t j = 0 ; j < i->indexData_.size() ; j++)
+		for (size_t j = 0; j < i->indexData_.size(); j++)
 			m.indexData_[totalIndexDataSize + j] += vtxOffset;
 
 		offs += (uint32_t)i->meshes_.size();
@@ -141,10 +142,10 @@ MeshFileHeader mergeMeshData(MeshData& m, const std::vector<MeshData*> md)
 		totalVertexDataSize += (uint32_t)i->vertexData_.size();
 	}
 
-	return MeshFileHeader {
+	return MeshFileHeader{
 		.magicValue = 0x12345678,
 		.meshCount = (uint32_t)offs,
-		.dataBlockStartOffset = (uint32_t )(sizeof(MeshFileHeader) + offs * sizeof(Mesh)),
+		.dataBlockStartOffset = (uint32_t)(sizeof(MeshFileHeader) + offs * sizeof(Mesh)),
 		.indexDataSize = static_cast<uint32_t>(totalIndexDataSize * sizeof(uint32_t)),
 		.vertexDataSize = static_cast<uint32_t>(totalVertexDataSize * sizeof(float))
 	};

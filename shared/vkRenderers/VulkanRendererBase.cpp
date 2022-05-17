@@ -3,10 +3,10 @@
 
 RendererBase::~RendererBase()
 {
-	for (auto buf : mUniformBuffers)
+	for (auto buf : uniformBuffers_)
 		vkDestroyBuffer(mDevice, buf, nullptr);
 
-	for (auto mem : mUniformBuffersMemory)
+	for (auto mem : uniformBuffersMemory_)
 		vkFreeMemory(mDevice, mem, nullptr);
 
 	vkDestroyDescriptorSetLayout(mDevice, descriptorSetLayout_, nullptr);
@@ -42,11 +42,11 @@ void RendererBase::beginRenderPass(VkCommandBuffer commandBuffer, size_t current
 
 bool RendererBase::createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize)
 {
-	mUniformBuffers.resize(vkDev.swapchainImages.size());
-	mUniformBuffersMemory.resize(vkDev.swapchainImages.size());
+	uniformBuffers_.resize(vkDev.swapchainImages.size());
+	uniformBuffersMemory_.resize(vkDev.swapchainImages.size());
 	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 	{
-		if (!createUniformBuffer(vkDev, mUniformBuffers[i], mUniformBuffersMemory[i], uniformDataSize))
+		if (!createUniformBuffer(vkDev, uniformBuffers_[i], uniformBuffersMemory_[i], uniformDataSize))
 		{
 			printf("Cannot create uniform buffer\n");
 			fflush(stdout);

@@ -58,7 +58,7 @@ bool PBRModelRenderer::createDescriptorSet(VulkanRenderDevice& vkDev, uint32_t u
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo  = { mUniformBuffers[i], 0, uniformDataSize };
+		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, uniformDataSize };
 		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_, 0, vertexBufferSize_ };
 		const VkDescriptorBufferInfo bufferInfo3 = { storageBuffer_, vertexBufferSize_, indexBufferSize_ };
 		const VkDescriptorImageInfo  imageInfoAO       = { texAO_.sampler, texAO_.image.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
@@ -102,7 +102,7 @@ void PBRModelRenderer::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t c
 
 void PBRModelRenderer::updateUniformBuffer(VulkanRenderDevice& vkDev, uint32_t currentImage, const void* data, const size_t dataSize)
 {
-	uploadBufferData(vkDev, mUniformBuffersMemory[currentImage], 0, data, dataSize);
+	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, data, dataSize);
 }
 
 static void loadTexture(VulkanRenderDevice& vkDev, const char* fileName, VulkanTexture& texture)

@@ -91,7 +91,7 @@ bool VulkanCanvas::createDescriptorSet(VulkanRenderDevice& vkDev)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo = {mUniformBuffers[i], 0, sizeof(UniformBuffer)};
+		const VkDescriptorBufferInfo bufferInfo = {uniformBuffers_[i], 0, sizeof(UniformBuffer)};
 		const VkDescriptorBufferInfo bufferInfo2 = {storageBuffer_[i], 0, kMaxLinesDataSize};
 
 		const std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
@@ -114,7 +114,7 @@ void VulkanCanvas::updateUniformBuffer(VulkanRenderDevice& vkDev, const glm::mat
 		.time = time
 	};
 
-	uploadBufferData(vkDev, mUniformBuffersMemory[currentImage], 0, &ubo, sizeof(ubo));
+	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, &ubo, sizeof(ubo));
 }
 
 void VulkanCanvas::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t currentImage)

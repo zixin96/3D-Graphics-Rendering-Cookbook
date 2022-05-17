@@ -36,12 +36,12 @@ protected:
 	// Framebuffers (one for each command buffer)
 	std::vector<VkFramebuffer> swapchainFramebuffers_;
 
-	// 4. Pipeline & render pass (using DescriptorSets & pipeline state options)
+	// Pipeline & render pass (using DescriptorSets & pipeline state options)
 	VkRenderPass renderPass_ = nullptr;
 	VkPipelineLayout pipelineLayout_ = nullptr;
 	VkPipeline graphicsPipeline_ = nullptr;
 
-	// 5. Uniform buffer
-	std::vector<VkBuffer> mUniformBuffers;
-	std::vector<VkDeviceMemory> mUniformBuffersMemory;
+	// Uniform buffer
+	std::vector<VkBuffer> uniformBuffers_;
+	std::vector<VkDeviceMemory> uniformBuffersMemory_;
 };

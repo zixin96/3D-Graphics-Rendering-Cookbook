@@ -288,15 +288,23 @@ bool createUniformBuffer(VulkanRenderDevice& vkDev, VkBuffer& buffer, VkDeviceMe
                          VkDeviceSize bufferSize);
 
 /** Copy [data] to GPU device buffer */
-void uploadBufferData(VulkanRenderDevice& vkDev, const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset,
-                      const void* data, const size_t dataSize);
+void uploadBufferData(VulkanRenderDevice& vkDev,
+                      const VkDeviceMemory& bufferMemory,
+                      VkDeviceSize deviceOffset,
+                      const void* data,
+                      const size_t dataSize);
 
 /** Copy GPU device buffer data to [outData] */
 void downloadBufferData(VulkanRenderDevice& vkDev, const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset,
                         void* outData, size_t dataSize);
 
-bool createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags,
-                     VkImageView* imageView, VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D, uint32_t layerCount = 1,
+bool createImageView(VkDevice device,
+                     VkImage image,
+                     VkFormat format,
+                     VkImageAspectFlags aspectFlags,
+                     VkImageView* imageView,
+                     VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D,
+                     uint32_t layerCount = 1,
                      uint32_t mipLevels = 1);
 
 enum eRenderPassBit : uint8_t
@@ -332,10 +340,19 @@ bool createColorAndDepthRenderPass(VulkanRenderDevice& device, bool useDepth, Vk
 bool createDepthOnlyRenderPass(VulkanRenderDevice& vkDev, VkRenderPass* renderPass, const RenderPassCreateInfo& ci);
 
 VkCommandBuffer beginSingleTimeCommands(VulkanRenderDevice& vkDev);
+
 void endSingleTimeCommands(VulkanRenderDevice& vkDev, VkCommandBuffer commandBuffer);
+
 void copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image, VkFormat format, VkImageLayout oldLayout,
-                           VkImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevels = 1);
+
+void transitionImageLayout(VulkanRenderDevice& vkDev,
+                           VkImage image,
+                           VkFormat format,
+                           VkImageLayout oldLayout,
+                           VkImageLayout newLayout,
+                           uint32_t layerCount = 1,
+                           uint32_t mipLevels = 1);
+
 void transitionImageLayoutCmd(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout,
                               VkImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevels = 1);
 
@@ -385,9 +402,15 @@ void destroyVulkanTexture(VkDevice device, VulkanTexture& texture);
 uint32_t bytesPerTexFormat(VkFormat fmt);
 
 /* VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL for real update of an existing texture */
-bool updateTextureImage(VulkanRenderDevice& vkDev, VkImage& textureImage, VkDeviceMemory& textureImageMemory,
-                        uint32_t texWidth, uint32_t texHeight, VkFormat texFormat, uint32_t layerCount,
-                        const void* imageData, VkImageLayout sourceImageLayout = VK_IMAGE_LAYOUT_UNDEFINED);
+bool updateTextureImage(VulkanRenderDevice& vkDev,
+                        VkImage& textureImage,
+                        VkDeviceMemory& textureImageMemory,
+                        uint32_t texWidth,
+                        uint32_t texHeight,
+                        VkFormat texFormat,
+                        uint32_t layerCount,
+                        const void* imageData,
+                        VkImageLayout sourceImageLayout = VK_IMAGE_LAYOUT_UNDEFINED);
 
 bool updateTextureVolume(VulkanRenderDevice& vkDev, VkImage& textureVolume, VkDeviceMemory& textureVolumeMemory,
                          uint32_t texWidth, uint32_t texHeight, uint32_t texDepth, VkFormat texFormat,
@@ -404,10 +427,14 @@ bool createPipelineLayoutWithConstants(VkDevice device, VkDescriptorSetLayout ds
                                        VkPipelineLayout* pipelineLayout, uint32_t vtxConstSize, uint32_t fragConstSize);
 
 bool createTextureImageFromData(VulkanRenderDevice& vkDev,
-                                VkImage& textureImage, VkDeviceMemory& textureImageMemory,
-                                void* imageData, uint32_t texWidth, uint32_t texHeight,
+                                VkImage& textureImage,
+                                VkDeviceMemory& textureImageMemory,
+                                void* imageData,
+                                uint32_t texWidth,
+                                uint32_t texHeight,
                                 VkFormat texFormat,
-                                uint32_t layerCount = 1, VkImageCreateFlags flags = 0);
+                                uint32_t layerCount = 1,
+                                VkImageCreateFlags flags = 0);
 
 bool createMIPTextureImageFromData(VulkanRenderDevice& vkDev,
                                    VkImage& textureImage, VkDeviceMemory& textureImageMemory,

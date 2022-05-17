@@ -2,24 +2,26 @@
 
 #include "shared/vkRenderers/VulkanRendererBase.h"
 
-class ImGuiRenderer: public RendererBase
+class ImGuiRenderer : public RendererBase
 {
 public:
 	explicit ImGuiRenderer(VulkanRenderDevice& vkDev);
-	explicit ImGuiRenderer(VulkanRenderDevice& vkDev, const std::vector<VulkanTexture>& textures);
+	// explicit ImGuiRenderer(VulkanRenderDevice& vkDev, const std::vector<VulkanTexture>& textures);
 	virtual ~ImGuiRenderer();
 
 	virtual void fillCommandBuffer(VkCommandBuffer commandBuffer, size_t currentImage) override;
 	void updateBuffers(VulkanRenderDevice& vkDev, uint32_t currentImage, const ImDrawData* imguiDrawData);
 
 private:
+	// the input data structure from IMGUI
 	const ImDrawData* drawData = nullptr;
 
 	bool createDescriptorSet(VulkanRenderDevice& vkDev);
 
-	/* Descriptor set with multiple textures (for offscreen buffer display etc.) */
-	bool createMultiDescriptorSet(VulkanRenderDevice& vkDev);
+	// Descriptor set with multiple textures (for offscreen buffer display etc.) 
+	// bool createMultiDescriptorSet(VulkanRenderDevice& vkDev);
 
+	// used in future chapter
 	std::vector<VulkanTexture> extTextures_;
 
 	// storage buffer with index and vertex data

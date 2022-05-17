@@ -528,32 +528,51 @@ VkResult createSwapchain(VkDevice device,
 	{
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 		.flags = 0,
+		// the surface onto which the swapchain will present images
+		// If the creation succeeds, the swapchain becomes associated with surface
 		.surface = surface,
+		// the minimum number of presentable images that the application needs
 		.minImageCount = chooseSwapImageCount(swapchainSupport.capabilities),
+		// fill in our chosen surface format
 		.imageFormat = surfaceFormat.format,
 		.imageColorSpace = surfaceFormat.colorSpace,
+		// the size (in pixels) of the swapchain image(s)
 		.imageExtent = {.width = width, .height = height},
+		// the number of views in a multiview/stereo surface. For non-stereoscopic-3D applications, this value is 1
 		.imageArrayLayers = 1,
-		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | (supportScreenshots
-			? VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-			: 0u),
+		// describes the intended usage of the (acquired) swapchain images:
+		// the image can be used to create a VkImageView suitable for use as a color or resolve attachment in a VkFramebuffer
+		// the image can be used as the destination of a transfer command
+		// If we support screen shots, specify that the image can be used as the source of a transfer command
+		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+		(supportScreenshots ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0u),
+		// the sharing mode used for the image(s) of the swapchain
+		// specifies that access to any range or image subresource of the object will be exclusive to a single queue family at a time
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		// the number of queue families having access to the image(s) of the swapchain
 		.queueFamilyIndexCount = 1,
+		// a pointer to an array of queue family indices having access to the images(s) of the swapchain
 		.pQueueFamilyIndices = &graphicsFamily,
+		// the transform, relative to the presentation engine’s natural orientation, applied to the image content prior to presentation
+		// currentTransform indicates the surface’s current transform relative to the presentation engine’s natural orientation
 		.preTransform = swapchainSupport.capabilities.currentTransform,
+		// the alpha compositing mode to use when this surface is composited together with other surfaces on certain window systems
+		// The alpha component, if it exists, of the images is ignored in the compositing process
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+		// fill in our chosen present mode
 		.presentMode = presentMode,
+		// we don’t care about the color of pixels that are obscured
 		.clipped = VK_TRUE,
+		// assume we’ll only ever create one swap chain. Thus, there is no old swap chain
 		.oldSwapchain = VK_NULL_HANDLE
 	};
 
 	return vkCreateSwapchainKHR(device, &ci, nullptr, swapchain);
 }
 
-size_t createSwapchainImages(
-	VkDevice device, VkSwapchainKHR swapchain,
-	std::vector<VkImage>& swapchainImages,
-	std::vector<VkImageView>& swapchainImageViews)
+size_t createSwapchainImages(VkDevice device, VkSwapchainKHR swapchain,
+                             std::vector<VkImage>& swapchainImages,
+                             std::vector<VkImageView>& swapchainImageViews)
 {
 	uint32_t imageCount = 0;
 	VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr));
@@ -564,10 +583,16 @@ size_t createSwapchainImages(
 	VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, swapchainImages.data()));
 
 	for (unsigned i = 0; i < imageCount; i++)
-		if (!createImageView(device, swapchainImages[i], VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT,
+	{
+		if (!createImageView(device,
+		                     swapchainImages[i],
+		                     VK_FORMAT_B8G8R8A8_UNORM,
+		                     VK_IMAGE_ASPECT_COLOR_BIT,
 		                     &swapchainImageViews[i]))
+		{
 			exit(0);
-
+		}
+	}
 	return static_cast<size_t>(imageCount);
 }
 
@@ -582,7 +607,7 @@ VkResult createSemaphore(VkDevice device, VkSemaphore* outSemaphore)
 }
 
 /**
- * \brief initializes VulkanRenderDevice
+ * \brief initializes every field inside VulkanRenderDevice
  * \param vk VulkanInstance that is needed for initializing VulkanRenderDevice
  * \param vkDev The output handle for VulkanRenderDevice
  * \param width The window width 
@@ -604,13 +629,22 @@ bool initVulkanRenderDevice(const VulkanInstance& vk,
 	// initializes VkPhysicalDevice inside VulkanRenderDevice struct
 	VK_CHECK(findSuitablePhysicalDevice(vk.instance, selector, &vkDev.physicalDevice));
 
+	// find a graphics queue family
 	vkDev.graphicsFamily = findQueueFamilies(vkDev.physicalDevice, VK_QUEUE_GRAPHICS_BIT);
 
 	// initializes VkDevice inside VulkanRenderDevice struct
 	VK_CHECK(createDevice(vkDev.physicalDevice, deviceFeatures, vkDev.graphicsFamily, &vkDev.device));
 
 	// initializes VkQueue (graphics) inside VulkanRenderDevice struct
-	vkGetDeviceQueue(vkDev.device, vkDev.graphicsFamily, 0, &vkDev.graphicsQueue);
+	vkGetDeviceQueue(
+		//  the logical device that owns the queue
+		vkDev.device,
+		// the index of the queue family to which the queue belongs
+		vkDev.graphicsFamily,
+		// the index within this queue family of the queue to retrieve (we only one queue, thus index is 0)
+		0,
+		// the output handle for graphics queue
+		&vkDev.graphicsQueue);
 
 	if (vkDev.graphicsQueue == nullptr)
 		exit(EXIT_FAILURE);
@@ -631,7 +665,7 @@ bool initVulkanRenderDevice(const VulkanInstance& vk,
 		height,
 		&vkDev.swapchain));
 
-	// initializes std::vector<VkImage> (swapchain) and std::vector<VkImageView> (swapchain) inside VulkanRenderDevice struct
+	// initializes swap chain std::vector<VkImage> and std::vector<VkImageView> inside VulkanRenderDevice struct
 	const size_t imageCount = createSwapchainImages(vkDev.device,
 	                                                vkDev.swapchain,
 	                                                vkDev.swapchainImages,
@@ -1066,9 +1100,9 @@ bool createDescriptorPool(VulkanRenderDevice& vkDev, uint32_t uniformBufferCount
 }
 
 /**
- * \brief Is the physical device suitable? 
+ * \brief Is the physical device suitable?
  * \param device The physical device
- * \return true if suitable, otherwise false
+ * \return true if it is a discrete or integrated GPU and supports geometry shader, otherwise false
  */
 bool isDeviceSuitable(VkPhysicalDevice device)
 {
@@ -1085,6 +1119,12 @@ bool isDeviceSuitable(VkPhysicalDevice device)
 	return isGPU && deviceFeatures.geometryShader;
 }
 
+/**
+ * \brief retrieves swap chain support details based on the specified physical device and the Vulkan surface
+ * \param device The physical device
+ * \param surface The Vulkan surface
+ * \return a SwapchainSupportDetails containing supported capabilities, formats, present modes
+ */
 SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
 	SwapchainSupportDetails details;
@@ -1111,11 +1151,24 @@ SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurface
 	return details;
 }
 
+/**
+ * \brief Choose swap chain format (specified inside this function) 
+ * \param availableFormats The available formats
+ * \return The requested swap chain surface format
+ */
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
+	// RGBA 8-bit per channel unsigned normalized format + the sRGB color space (for more accurate perceived color)
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-data-conversion
+	// TODO: Why don't we use VK_FORMAT_B8G8R8A8_SRGB? Since we are using sRGB space? 
 	return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 }
 
+/**
+ * \brief Choose swap chain present mode (specified inside this function)
+ * \param availablePresentModes The available present modes
+ * \return The requested present mode
+ */
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 {
 	for (const auto mode : availablePresentModes)
@@ -1126,12 +1179,25 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
+/**
+ * \brief Specify how many images we would like to have in the swap chain
+ * \param capabilities The surface capabilities
+ * \return The number of presentable images the application needs
+ */
 uint32_t chooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities)
 {
+	// capabilities.minImageCount is the minimum number of images that the swap chain requires to function
+
+	// request one additional image to make sure that we don't need to wait on the driver to complete internal
+	// operations before we can acquire another image to render to
 	const uint32_t imageCount = capabilities.minImageCount + 1;
 
-	const bool imageCountExceeded = capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount;
+	// capabilities.maxImageCount is the maximum number of images that the swap chain supports
+	// 0 means that there is no limit on the number of images
 
+	// If there is a limitation on the image count AND our specified imageCount is larger than the max count,
+	// we fall back the max image count. Otherwise, it's safe to use our specified imageCount
+	const bool imageCountExceeded = capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount;
 	return imageCountExceeded ? capabilities.maxImageCount : imageCount;
 }
 
@@ -1891,8 +1957,13 @@ void copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer, VkBuffer dstBuffe
 	endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image, VkFormat format, VkImageLayout oldLayout,
-                           VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
+void transitionImageLayout(VulkanRenderDevice& vkDev,
+                           VkImage image,
+                           VkFormat format,
+                           VkImageLayout oldLayout,
+                           VkImageLayout newLayout,
+                           uint32_t layerCount,
+                           uint32_t mipLevels)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 

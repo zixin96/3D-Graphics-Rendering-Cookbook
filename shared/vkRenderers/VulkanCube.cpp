@@ -39,7 +39,7 @@ bool CubeRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo = {mUniformBuffers[i], 0, sizeof(mat4)};
+		const VkDescriptorBufferInfo bufferInfo = {uniformBuffers_[i], 0, sizeof(mat4)};
 		const VkDescriptorImageInfo imageInfo = {
 			mTextureSampler, mTexture.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
@@ -75,7 +75,7 @@ void CubeRenderer::updateUniformBuffer(VulkanRenderDevice& vkDev, uint32_t curre
 {
 	// uploads the current camera matrix into a GPU buffer
 	uploadBufferData(vkDev,
-	                 mUniformBuffersMemory[currentImage],
+	                 uniformBuffersMemory_[currentImage],
 	                 0,
 	                 glm::value_ptr(m),
 	                 sizeof(mat4));

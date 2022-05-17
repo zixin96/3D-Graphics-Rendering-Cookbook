@@ -44,7 +44,7 @@ bool ModelRenderer::createDescriptorSet(VulkanRenderDevice& vkDev, uint32_t unif
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo  = { mUniformBuffers[i], 0, uniformDataSize };
+		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, uniformDataSize };
 		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_, 0, vertexBufferSize_ };
 		const VkDescriptorBufferInfo bufferInfo3 = { storageBuffer_, vertexBufferSize_, indexBufferSize_ };
 		const VkDescriptorImageInfo  imageInfo   = { textureSampler_, texture_.imageView, useGeneralTextureLayout_ ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
@@ -74,7 +74,7 @@ void ModelRenderer::fillCommandBuffer(VkCommandBuffer commandBuffer, size_t curr
 
 void ModelRenderer::updateUniformBuffer(VulkanRenderDevice& vkDev, uint32_t currentImage, const void* data, const size_t dataSize)
 {
-	uploadBufferData(vkDev, mUniformBuffersMemory[currentImage], 0, data, dataSize);
+	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, data, dataSize);
 }
 
 ModelRenderer::ModelRenderer(VulkanRenderDevice& vkDev, const char* modelFile, const char* textureFile, uint32_t uniformDataSize)

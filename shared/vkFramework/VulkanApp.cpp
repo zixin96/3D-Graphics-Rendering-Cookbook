@@ -15,10 +15,10 @@ Resolution detectResolution(int width, int height)
 
 	const GLFWvidmode* info = glfwGetVideoMode(monitor);
 
-	const uint32_t windowW = width  > 0 ? width : (uint32_t)(info->width * width / -100);
+	const uint32_t windowW = width > 0 ? width : (uint32_t)(info->width * width / -100);
 	const uint32_t windowH = height > 0 ? height : (uint32_t)(info->height * height / -100);
 
-	return Resolution{ .width = windowW, .height = windowH };
+	return Resolution{.width = windowW, .height = windowH};
 }
 
 GLFWwindow* initVulkanApp(int width, int height, Resolution* resolution)
@@ -39,7 +39,7 @@ GLFWwindow* initVulkanApp(int width, int height, Resolution* resolution)
 	if (resolution)
 	{
 		*resolution = detectResolution(width, height);
-		width  = resolution->width;
+		width = resolution->width;
 		height = resolution->height;
 	}
 
@@ -53,10 +53,13 @@ GLFWwindow* initVulkanApp(int width, int height, Resolution* resolution)
 	return result;
 }
 
-bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& updateBuffersFunc, const std::function<void(VkCommandBuffer, uint32_t)>& composeFrameFunc)
+bool drawFrame(VulkanRenderDevice& vkDev,
+               const std::function<void(uint32_t)>& updateBuffersFunc,
+               const std::function<void(VkCommandBuffer, uint32_t)>& composeFrameFunc)
 {
 	uint32_t imageIndex = 0;
-	VkResult result = vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.imageAvailableSemaphore,
+	                                        VK_NULL_HANDLE, &imageIndex);
 	VK_CHECK(vkResetCommandPool(vkDev.device, vkDev.commandPool, 0));
 
 	if (result != VK_SUCCESS) return false;
@@ -79,7 +82,8 @@ bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& u
 
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
-	const VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }; // or even VERTEX_SHADER_STAGE
+	const VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	// or even VERTEX_SHADER_STAGE
 
 	const VkSubmitInfo si =
 	{
@@ -122,19 +126,20 @@ void VulkanRenderContext::updateBuffers(uint32_t imageIndex)
 
 void VulkanRenderContext::composeFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
-	const VkRect2D defaultScreenRect {
-		.offset = { 0, 0 },
-		.extent = {.width = vkDev.framebufferWidth, .height = vkDev.framebufferHeight }
+	const VkRect2D defaultScreenRect{
+		.offset = {0, 0},
+		.extent = {.width = vkDev.framebufferWidth, .height = vkDev.framebufferHeight}
 	};
 
 	static const VkClearValue defaultClearValues[2] =
 	{
-		VkClearValue { .color = { 1.0f, 1.0f, 1.0f, 1.0f } },
-		VkClearValue { .depthStencil = { 1.0f, 0 } }
+		VkClearValue{.color = {1.0f, 1.0f, 1.0f, 1.0f}},
+		VkClearValue{.depthStencil = {1.0f, 0}}
 	};
 
-	beginRenderPass(commandBuffer, clearRenderPass.handle, imageIndex, defaultScreenRect, VK_NULL_HANDLE, 2u, defaultClearValues);
-	vkCmdEndRenderPass( commandBuffer );
+	beginRenderPass(commandBuffer, clearRenderPass.handle, imageIndex, defaultScreenRect, VK_NULL_HANDLE, 2u,
+	                defaultClearValues);
+	vkCmdEndRenderPass(commandBuffer);
 
 	for (auto& r : onScreenRenderers_)
 		if (r.enabled_)
@@ -151,7 +156,7 @@ void VulkanRenderContext::composeFrame(VkCommandBuffer commandBuffer, uint32_t i
 		}
 
 	beginRenderPass(commandBuffer, finalRenderPass.handle, imageIndex, defaultScreenRect);
-	vkCmdEndRenderPass( commandBuffer );
+	vkCmdEndRenderPass(commandBuffer);
 }
 
 void VulkanApp::assignCallbacks()
@@ -164,7 +169,7 @@ void VulkanApp::assignCallbacks()
 			int width, height;
 			glfwGetFramebufferSize(window, &width, &height);
 
-			void* ptr = glfwGetWindowUserPointer(window); 	
+			void* ptr = glfwGetWindowUserPointer(window);
 			const float mx = static_cast<float>(x / width);
 			const float my = static_cast<float>(y / height);
 			reinterpret_cast<VulkanApp*>(ptr)->handleMouseMove(mx, my);
@@ -179,7 +184,7 @@ void VulkanApp::assignCallbacks()
 			const int idx = button == GLFW_MOUSE_BUTTON_LEFT ? 0 : button == GLFW_MOUSE_BUTTON_RIGHT ? 2 : 1;
 			io.MouseDown[idx] = action == GLFW_PRESS;
 
-			void* ptr = glfwGetWindowUserPointer(window); 	
+			void* ptr = glfwGetWindowUserPointer(window);
 			reinterpret_cast<VulkanApp*>(ptr)->handleMouseClick(button, action == GLFW_PRESS);
 		}
 	);
@@ -192,8 +197,8 @@ void VulkanApp::assignCallbacks()
 			if (key == GLFW_KEY_ESCAPE && pressed)
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-				void* ptr = glfwGetWindowUserPointer(window); 	
-				reinterpret_cast<VulkanApp*>(ptr)->handleKey(key, pressed);
+			void* ptr = glfwGetWindowUserPointer(window);
+			reinterpret_cast<VulkanApp*>(ptr)->handleKey(key, pressed);
 		}
 	);
 }
@@ -229,15 +234,15 @@ void VulkanApp::mainLoop()
 		fpsCounter_.tick(deltaSeconds);
 
 		bool frameRendered = drawFrame(ctx_.vkDev,
-			[this](uint32_t img) { this->updateBuffers(img); },
-			[this](auto cmd, auto img) { ctx_.composeFrame(cmd, img); }
+		                               [this](uint32_t img) { this->updateBuffers(img); },
+		                               [this](auto cmd, auto img) { ctx_.composeFrame(cmd, img); }
 		);
 
 		fpsCounter_.tick(deltaSeconds, frameRendered);
 
 		glfwPollEvents();
-
-	} while (!glfwWindowShouldClose(window_));
+	}
+	while (!glfwWindowShouldClose(window_));
 }
 
 void CameraApp::handleKey(int key, bool pressed)

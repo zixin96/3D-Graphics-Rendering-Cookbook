@@ -4,6 +4,7 @@
 layout(location = 0) out vec3 uvw;
 
 struct ImDrawVert   { float x, y, z; float u, v; float nx, ny, nz; };
+
 struct DrawData {
 	uint mesh;
 	uint material;
@@ -12,6 +13,7 @@ struct DrawData {
 	uint vertexOffset;
 	uint transformIndex;
 };
+
 struct MaterialData { uint tex2D; };
 
 layout(binding = 0) uniform  UniformBuffer { mat4   inMtx; } ubo;

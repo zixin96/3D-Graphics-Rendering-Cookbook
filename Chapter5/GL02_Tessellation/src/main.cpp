@@ -16,6 +16,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+// This demo shows how  hardware tessellation can be used to triangulate a mesh depending on the distance from the camera
+
+// The tessellation control shader operates on a set of vertices, which are called control points
+// and define a geometric surface called a patch. The shader can manipulate the control points and calculate the required tessellation level.
+
+// The tessellation evaluation shader can access the barycentric coordinates of the tessellated triangles and can use them
+// to interpolate any per-vertex attributes that are required, such as texture coordinates, colors, and more.
+
 struct PerFrameData
 {
 	mat4 view;

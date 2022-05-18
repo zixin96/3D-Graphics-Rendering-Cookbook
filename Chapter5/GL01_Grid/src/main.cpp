@@ -7,6 +7,8 @@
 #include "shared/UtilsMath.h"
 #include "shared/Camera.h"
 
+// TODO: A more more visually pleasing grid implementation can be find here: https://ourmachinery.com/post/borderland-between-rendering-and-editor-part-1/
+
 struct PerFrameData
 {
 	mat4 view;
@@ -92,16 +94,16 @@ int main(void)
 		}
 	);
 
-	double timeStamp = glfwGetTime();
-	float deltaSeconds = 0.0f;
+	/*double timeStamp = glfwGetTime();
+	float deltaSeconds = 0.0f;*/
 
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
-		positioner.update(deltaSeconds, mouseState.pos, mouseState.pressedLeft);
+		positioner.update((double)app.getDeltaSeconds(), mouseState.pos, mouseState.pressedLeft);
 
-		const double newTimeStamp = glfwGetTime();
+		/*const double newTimeStamp = glfwGetTime();
 		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
-		timeStamp = newTimeStamp;
+		timeStamp = newTimeStamp;*/
 
 		int width, height;
 		glfwGetFramebufferSize(app.getWindow(), &width, &height);

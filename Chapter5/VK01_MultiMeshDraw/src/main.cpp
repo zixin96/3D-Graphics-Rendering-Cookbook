@@ -12,8 +12,8 @@ VulkanInstance vk;
 VulkanRenderDevice vkDev;
 
 std::unique_ptr<MultiMeshRenderer> multiRenderer;
-std::unique_ptr<VulkanClear>   clear;
-std::unique_ptr<VulkanFinish>  finish;
+std::unique_ptr<VulkanClear> clear;
+std::unique_ptr<VulkanFinish> finish;
 
 struct MouseState
 {
@@ -21,7 +21,9 @@ struct MouseState
 	bool pressedLeft = false;
 } mouseState;
 
-CameraPositioner_FirstPerson positioner_firstPerson(glm::vec3(0.0f, -5.0f, 15.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+CameraPositioner_FirstPerson positioner_firstPerson(glm::vec3(0.0f, -5.0f, 15.0f),
+                                                    vec3(0.0f, 0.0f, -1.0f),
+                                                    vec3(0.0f, 1.0f, 0.0f));
 Camera camera = Camera(positioner_firstPerson);
 
 void initVulkan()
@@ -34,16 +36,20 @@ void initVulkan()
 	if (glfwCreateWindowSurface(vk.instance, window, nullptr, &vk.surface))
 		exit(EXIT_FAILURE);
 
-	if (!initVulkanRenderDevice(vk, vkDev, kScreenWidth, kScreenHeight, isDeviceSuitable, { .multiDrawIndirect = VK_TRUE, .drawIndirectFirstInstance = VK_TRUE }))
+	if (!initVulkanRenderDevice(vk, vkDev, kScreenWidth, kScreenHeight, isDeviceSuitable, {
+		                            .multiDrawIndirect = VK_TRUE, .drawIndirectFirstInstance = VK_TRUE
+	                            }))
 		exit(EXIT_FAILURE);
 
 	clear = std::make_unique<VulkanClear>(vkDev, VulkanImage());
 	finish = std::make_unique<VulkanFinish>(vkDev, VulkanImage());
 
 	multiRenderer = std::make_unique<MultiMeshRenderer>(vkDev,
-		"data/meshes/test.meshes", "data/meshes/test.meshes.drawdata",
-		"",
-		"data/shaders/chapter05/VK01.vert", "data/shaders/chapter05/VK01.frag");
+	                                                    "data/meshes/test.meshes",
+	                                                    "data/meshes/test.meshes.drawdata",
+	                                                    "",
+	                                                    "data/shaders/chapter05/VK01.vert",
+	                                                    "data/shaders/chapter05/VK01.frag");
 }
 
 void terminateVulkan()

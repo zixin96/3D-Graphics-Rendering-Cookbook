@@ -42,22 +42,26 @@ bool MultiMeshRenderer::createDescriptorSet(VulkanRenderDevice& vkDev)
 	{
 		VkDescriptorSet ds = descriptorSets_[i];
 
-		const VkDescriptorBufferInfo bufferInfo  = { uniformBuffers_[i], 0, sizeof(mat4) };
-		const VkDescriptorBufferInfo bufferInfo2 = { storageBuffer_, 0, maxVertexBufferSize_ };
-		const VkDescriptorBufferInfo bufferInfo3 = { storageBuffer_, maxVertexBufferSize_, maxIndexBufferSize_ };
-		const VkDescriptorBufferInfo bufferInfo4 = { drawDataBuffers_[i], 0, maxDrawDataSize_ };
-		const VkDescriptorBufferInfo bufferInfo5 = { materialBuffer_, 0, maxMaterialSize_ };
+		const VkDescriptorBufferInfo bufferInfo = {uniformBuffers_[i], 0, sizeof(mat4)};
+		const VkDescriptorBufferInfo bufferInfo2 = {storageBuffer_, 0, maxVertexBufferSize_};
+		const VkDescriptorBufferInfo bufferInfo3 = {storageBuffer_, maxVertexBufferSize_, maxIndexBufferSize_};
+		const VkDescriptorBufferInfo bufferInfo4 = {drawDataBuffers_[i], 0, maxDrawDataSize_};
+		const VkDescriptorBufferInfo bufferInfo5 = {materialBuffer_, 0, maxMaterialSize_};
 
 		const std::array<VkWriteDescriptorSet, 5> descriptorWrites = {
-			bufferWriteDescriptorSet(ds, &bufferInfo,  0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
+			bufferWriteDescriptorSet(ds, &bufferInfo, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
 			bufferWriteDescriptorSet(ds, &bufferInfo2, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
 			bufferWriteDescriptorSet(ds, &bufferInfo3, 2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
 			bufferWriteDescriptorSet(ds, &bufferInfo4, 3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
 			bufferWriteDescriptorSet(ds, &bufferInfo5, 4, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
-//			imageWriteDescriptorSet( ds, &imageInfo,   3)
+			//			imageWriteDescriptorSet( ds, &imageInfo,   3)
 		};
 
-		vkUpdateDescriptorSets(vkDev.device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(vkDev.device,
+		                       static_cast<uint32_t>(descriptorWrites.size()),
+		                       descriptorWrites.data(),
+		                       0,
+		                       nullptr);
 	}
 
 	return true;
@@ -79,13 +83,20 @@ void MultiMeshRenderer::updateUniformBuffer(VulkanRenderDevice& vkDev, size_t cu
 	uploadBufferData(vkDev, uniformBuffersMemory_[currentImage], 0, glm::value_ptr(m), sizeof(mat4));
 }
 
-void MultiMeshRenderer::updateGeometryBuffers(VulkanRenderDevice& vkDev, uint32_t vertexCount, uint32_t indexCount, const void* vertices, const void* indices)
+void MultiMeshRenderer::updateGeometryBuffers(VulkanRenderDevice& vkDev,
+                                              uint32_t vertexCount,
+                                              uint32_t indexCount,
+                                              const void* vertices,
+                                              const void* indices)
 {
 	uploadBufferData(vkDev, storageBufferMemory_, 0, vertices, vertexCount);
 	uploadBufferData(vkDev, storageBufferMemory_, maxVertexBufferSize_, indices, indexCount);
 }
 
-void MultiMeshRenderer::updateDrawDataBuffer(VulkanRenderDevice& vkDev, size_t currentImage, uint32_t drawDataSize, const void* drawData)
+void MultiMeshRenderer::updateDrawDataBuffer(VulkanRenderDevice& vkDev,
+                                             size_t currentImage,
+                                             uint32_t drawDataSize,
+                                             const void* drawData)
 {
 	uploadBufferData(vkDev, drawDataBuffersMemory_[currentImage], 0, drawData, drawDataSize);
 }
@@ -102,16 +113,33 @@ void MultiMeshRenderer::updateCountBuffer(VulkanRenderDevice& vkDev, size_t curr
 void MultiMeshRenderer::updateIndirectBuffers(VulkanRenderDevice& vkDev, size_t currentImage, bool* visibility)
 {
 	VkDrawIndirectCommand* data = nullptr;
-	vkMapMemory(vkDev.device, indirectBuffersMemory_[currentImage], 0, 2 * sizeof(VkDrawIndirectCommand), 0, (void **)&data);
 
-	for (uint32_t i = 0 ; i < maxShapes_ ; i++)
+	// Map a memory object into application address space
+	vkMapMemory(
+		// the logical device that owns the memory
+		vkDev.device,
+		// the VkDeviceMemory object to be mapped
+		indirectBuffersMemory_[currentImage],
+		// a zero-based byte offset from the beginning of the memory object
+		0,
+		// the size of the memory range to map
+		2 * sizeof(VkDrawIndirectCommand),
+		0,
+		// a pointer to a void * variable in which is returned a host-accessible pointer to the beginning of the mapped range
+		(void**)&data);
+
+	for (uint32_t i = 0; i < maxShapes_; i++)
 	{
 		const uint32_t j = shapes[i].meshIndex;
 		const uint32_t lod = shapes[i].LOD;
 		data[i] = {
+			// the number of vertices to draw
 			.vertexCount = meshData_.meshes_[j].getLODIndicesCount(lod),
+			// the number of instances to draw
 			.instanceCount = visibility ? (visibility[i] ? 1u : 0u) : 1u,
+			// the index of the first vertex to draw
 			.firstVertex = 0,
+			// the instance ID of the first instance to draw
 			.firstInstance = i
 		};
 	}
@@ -122,7 +150,8 @@ void MultiMeshRenderer::loadDrawData(const char* drawDataFile)
 {
 	FILE* f = fopen(drawDataFile, "rb");
 
-	if (!f) {
+	if (!f)
+	{
 		printf("Unable to open draw data file. Run MeshConvert first\n");
 		exit(255);
 	}
@@ -132,11 +161,13 @@ void MultiMeshRenderer::loadDrawData(const char* drawDataFile)
 	fseek(f, 0, SEEK_SET);
 	maxShapes_ = static_cast<uint32_t>(fsize / sizeof(DrawData));
 
-	printf("Reading draw data items: %d\n", (int)maxShapes_); fflush(stdout);
+	printf("Reading draw data items: %d\n", (int)maxShapes_);
+	fflush(stdout);
 
 	shapes.resize(maxShapes_);
 
-	if (fread(shapes.data(), sizeof(DrawData), maxShapes_, f) != maxShapes_) {
+	if (fread(shapes.data(), sizeof(DrawData), maxShapes_, f) != maxShapes_)
+	{
 		printf("Unable to read draw data\n");
 		exit(255);
 	}
@@ -144,15 +175,14 @@ void MultiMeshRenderer::loadDrawData(const char* drawDataFile)
 	fclose(f);
 }
 
-MultiMeshRenderer::MultiMeshRenderer(
-	VulkanRenderDevice& vkDev,
-	const char* meshFile,
-	const char* drawDataFile,
-	const char* materialFile,
-	const char* vertShaderFile,
-	const char* fragShaderFile) :
-	vkDev(vkDev),
-	RendererBase(vkDev, VulkanImage())
+MultiMeshRenderer::MultiMeshRenderer(VulkanRenderDevice& vkDev,
+                                     const char* meshFile,
+                                     const char* drawDataFile,
+                                     const char* materialFile,
+                                     const char* vertShaderFile,
+                                     const char* fragShaderFile)
+	: RendererBase(vkDev, VulkanImage()), vkDev(vkDev)
+
 {
 	if (!createColorAndDepthRenderPass(vkDev, false, &renderPass_, RenderPassCreateInfo()))
 	{
@@ -183,9 +213,9 @@ MultiMeshRenderer::MultiMeshRenderer(
 	indirectBuffersMemory_.resize(vkDev.swapchainImages.size());
 
 	if (!createBuffer(vkDev.device, vkDev.physicalDevice, maxMaterialSize_,
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		materialBuffer_, materialBufferMemory_))
+	                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+	                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                  materialBuffer_, materialBufferMemory_))
 	{
 		printf("Cannot create material buffer\n");
 		fflush(stdout);
@@ -196,7 +226,7 @@ MultiMeshRenderer::MultiMeshRenderer(
 	maxIndexBufferSize_ = header.indexDataSize;
 
 	VkPhysicalDeviceProperties devProps;
-        vkGetPhysicalDeviceProperties(vkDev.physicalDevice, &devProps);
+	vkGetPhysicalDeviceProperties(vkDev.physicalDevice, &devProps);
 	const uint32_t offsetAlignment = static_cast<uint32_t>(devProps.limits.minStorageBufferOffsetAlignment);
 	if ((maxVertexBufferSize_ & (offsetAlignment - 1)) != 0)
 	{
@@ -207,44 +237,51 @@ MultiMeshRenderer::MultiMeshRenderer(
 	}
 
 	if (!createBuffer(vkDev.device, vkDev.physicalDevice, maxVertexBufferSize_ + maxIndexBufferSize_,
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		storageBuffer_, storageBufferMemory_))
+	                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+	                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                  storageBuffer_, storageBufferMemory_))
 	{
-		printf("Cannot create vertex/index buffer\n"); fflush(stdout);
+		printf("Cannot create vertex/index buffer\n");
+		fflush(stdout);
 		exit(EXIT_FAILURE);
 	}
 
-	updateGeometryBuffers(vkDev, header.vertexDataSize, header.indexDataSize, meshData_.vertexData_.data(), meshData_.indexData_.data());
+	updateGeometryBuffers(vkDev, header.vertexDataSize, header.indexDataSize, meshData_.vertexData_.data(),
+	                      meshData_.indexData_.data());
 
 	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
 	{
 		if (!createBuffer(vkDev.device, vkDev.physicalDevice, indirectDataSize,
-			VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, // | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, /* for debugging we make it host-visible */
-			indirectBuffers_[i], indirectBuffersMemory_[i]))
+		                  VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, // | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                  /* for debugging we make it host-visible */
+		                  indirectBuffers_[i], indirectBuffersMemory_[i]))
 		{
-			printf("Cannot create indirect buffer\n"); fflush(stdout);
+			printf("Cannot create indirect buffer\n");
+			fflush(stdout);
 			exit(EXIT_FAILURE);
 		}
 
 		updateIndirectBuffers(vkDev, i);
 
 		if (!createBuffer(vkDev.device, vkDev.physicalDevice, maxDrawDataSize_,
-			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, /* for debugging we make it host-visible */
-			drawDataBuffers_[i], drawDataBuffersMemory_[i]))
+		                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                  /* for debugging we make it host-visible */
+		                  drawDataBuffers_[i], drawDataBuffersMemory_[i]))
 		{
-			printf("Cannot create draw data buffer\n"); fflush(stdout);
+			printf("Cannot create draw data buffer\n");
+			fflush(stdout);
 			exit(EXIT_FAILURE);
 		}
 
 		updateDrawDataBuffer(vkDev, i, maxDrawDataSize_, shapes.data());
 
 		if (!createBuffer(vkDev.device, vkDev.physicalDevice, sizeof(uint32_t),
-			VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, /* for debugging we make it host-visible */
-			countBuffers_[i], countBuffersMemory_[i]))
+		                  VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+		                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                  /* for debugging we make it host-visible */
+		                  countBuffers_[i], countBuffersMemory_[i]))
 		{
 			printf("Cannot create count buffer\n");
 			fflush(stdout);
@@ -259,9 +296,11 @@ MultiMeshRenderer::MultiMeshRenderer(
 		!createDescriptorPool(vkDev, 1, 4, 0, &descriptorPool_) ||
 		!createDescriptorSet(vkDev) ||
 		!createPipelineLayout(vkDev.device, descriptorSetLayout_, &pipelineLayout_) ||
-		!createGraphicsPipeline(vkDev, renderPass_, pipelineLayout_, { vertShaderFile, fragShaderFile }, &graphicsPipeline_))
+		!createGraphicsPipeline(vkDev, renderPass_, pipelineLayout_, {vertShaderFile, fragShaderFile},
+		                        &graphicsPipeline_))
 	{
-		printf("Failed to create pipeline\n"); fflush(stdout);
+		printf("Failed to create pipeline\n");
+		fflush(stdout);
 		exit(EXIT_FAILURE);
 	}
 }

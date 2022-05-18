@@ -23,8 +23,8 @@ RendererBase::~RendererBase()
 void RendererBase::beginRenderPass(VkCommandBuffer commandBuffer, size_t currentImage)
 {
 	const VkRect2D screenRect = {
-		.offset = { 0, 0 },
-		.extent = {.width = framebufferWidth_, .height = framebufferHeight_ }
+		.offset = {0, 0},
+		.extent = {.width = framebufferWidth_, .height = framebufferHeight_}
 	};
 
 	const VkRenderPassBeginInfo renderPassInfo = {
@@ -37,7 +37,8 @@ void RendererBase::beginRenderPass(VkCommandBuffer commandBuffer, size_t current
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1, &descriptorSets_[currentImage], 0, nullptr);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1,
+	                        &descriptorSets_[currentImage], 0, nullptr);
 }
 
 bool RendererBase::createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize)

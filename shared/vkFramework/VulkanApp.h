@@ -31,24 +31,28 @@ using glm::vec4;
 
 struct Resolution
 {
-	uint32_t width  = 0;
+	uint32_t width = 0;
 	uint32_t height = 0;
 };
 
 GLFWwindow* initVulkanApp(int width, int height, Resolution* resolution = nullptr);
 
-bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& updateBuffersFunc, const std::function<void(VkCommandBuffer, uint32_t)>& composeFrameFunc);
+bool drawFrame(VulkanRenderDevice& vkDev, const std::function<void(uint32_t)>& updateBuffersFunc,
+               const std::function<void(VkCommandBuffer, uint32_t)>& composeFrameFunc);
 
 struct Renderer;
 
-struct RenderItem {
+struct RenderItem
+{
 	Renderer& renderer_;
 	bool enabled_ = true;
 	bool useDepth_ = true;
+
 	explicit RenderItem(Renderer& r, bool useDepth = true)
-	: renderer_(r)
-	, useDepth_(useDepth)
-	{}
+		: renderer_(r)
+		  , useDepth_(useDepth)
+	{
+	}
 };
 
 struct VulkanRenderContext
@@ -58,17 +62,25 @@ struct VulkanRenderContext
 	VulkanContextCreator ctxCreator;
 	VulkanResources resources;
 
-	VulkanRenderContext(void* window, uint32_t screenWidth, uint32_t screenHeight, const VulkanContextFeatures& ctxFeatures = VulkanContextFeatures()):
+	VulkanRenderContext(void* window, uint32_t screenWidth, uint32_t screenHeight,
+	                    const VulkanContextFeatures& ctxFeatures = VulkanContextFeatures()):
 		ctxCreator(vk, vkDev, window, screenWidth, screenHeight, ctxFeatures),
 		resources(vkDev),
 
-		depthTexture(resources.addDepthTexture(vkDev.framebufferWidth, vkDev.framebufferHeight, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)),
+		depthTexture(resources.addDepthTexture(vkDev.framebufferWidth, vkDev.framebufferHeight,
+		                                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)),
 
 		screenRenderPass(resources.addFullScreenPass()),
 		screenRenderPass_NoDepth(resources.addFullScreenPass(false)),
 
-		finalRenderPass(resources.addFullScreenPass(true, RenderPassCreateInfo { .clearColor_ = false, .clearDepth_ = false, .flags_ = eRenderPassBit_Last  })),
-		clearRenderPass(resources.addFullScreenPass(true, RenderPassCreateInfo { .clearColor_ =  true, .clearDepth_ =  true, .flags_ = eRenderPassBit_First })),
+		finalRenderPass(resources.addFullScreenPass(true, RenderPassCreateInfo{
+			                                            .clearColor_ = false, .clearDepth_ = false,
+			                                            .flags_ = eRenderPassBit_Last
+		                                            })),
+		clearRenderPass(resources.addFullScreenPass(true, RenderPassCreateInfo{
+			                                            .clearColor_ = true, .clearDepth_ = true,
+			                                            .flags_ = eRenderPassBit_First
+		                                            })),
 
 		swapchainFramebuffers(resources.addFramebuffers(screenRenderPass.handle, depthTexture.image.imageView)),
 		swapchainFramebuffers_NoDepth(resources.addFramebuffers(screenRenderPass_NoDepth.handle))
@@ -79,8 +91,9 @@ struct VulkanRenderContext
 	void composeFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	// For Chapter 8 & 9
-	inline PipelineInfo pipelineParametersForOutputs(const std::vector<VulkanTexture>& outputs) const {
-		return PipelineInfo {
+	inline PipelineInfo pipelineParametersForOutputs(const std::vector<VulkanTexture>& outputs) const
+	{
+		return PipelineInfo{
 			.width = outputs.empty() ? vkDev.framebufferWidth : outputs[0].width,
 			.height = outputs.empty() ? vkDev.framebufferHeight : outputs[0].height,
 			.useBlending = false
@@ -102,8 +115,8 @@ struct VulkanRenderContext
 	std::vector<VkFramebuffer> swapchainFramebuffers_NoDepth;
 
 	void beginRenderPass(VkCommandBuffer cmdBuffer, VkRenderPass pass, size_t currentImage, const VkRect2D area,
-		VkFramebuffer fb = VK_NULL_HANDLE,
-		uint32_t clearValueCount = 0, const VkClearValue* clearValues = nullptr)
+	                     VkFramebuffer fb = VK_NULL_HANDLE,
+	                     uint32_t clearValueCount = 0, const VkClearValue* clearValues = nullptr)
 	{
 		const VkRenderPassBeginInfo renderPassInfo = {
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -114,7 +127,7 @@ struct VulkanRenderContext
 			.pClearValues = clearValues
 		};
 
-		vkCmdBeginRenderPass( cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+		vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	}
 };
 
@@ -122,8 +135,8 @@ struct VulkanApp
 {
 	VulkanApp(int screenWidth, int screenHeight, const VulkanContextFeatures& ctxFeatures = VulkanContextFeatures())
 		: window_(initVulkanApp(screenWidth, screenHeight, &resolution_)),
-		ctx_(window_, resolution_.width, resolution_.height, ctxFeatures),
-		onScreenRenderers_(ctx_.onScreenRenderers_)
+		  ctx_(window_, resolution_.width, resolution_.height, ctxFeatures),
+		  onScreenRenderers_(ctx_.onScreenRenderers_)
 	{
 		glfwSetWindowUserPointer(window_, this);
 		assignCallbacks();
@@ -135,7 +148,10 @@ struct VulkanApp
 		glfwTerminate();
 	}
 
-	virtual void drawUI() {}
+	virtual void drawUI()
+	{
+	}
+
 	virtual void draw3D() = 0;
 
 	void mainLoop();
@@ -144,6 +160,7 @@ struct VulkanApp
 	inline bool shouldHandleMouse() const { return !ImGui::GetIO().WantCaptureMouse; }
 
 	virtual void handleKey(int key, bool pressed) = 0;
+
 	virtual void handleMouseClick(int button, bool pressed)
 	{
 		if (button == GLFW_MOUSE_BUTTON_LEFT)
@@ -179,21 +196,23 @@ private:
 	void updateBuffers(uint32_t imageIndex);
 };
 
-struct CameraApp: public VulkanApp
+struct CameraApp : public VulkanApp
 {
 	CameraApp(int screenWidth, int screenHeight, const VulkanContextFeatures& ctxFeatures = VulkanContextFeatures()):
 		VulkanApp(screenWidth, screenHeight, ctxFeatures),
 
 		positioner(glm::vec3(0.0f, 5.0f, 10.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, -1.0f, 0.0f)),
 		camera(positioner)
-	{}
+	{
+	}
 
 	virtual void update(float deltaSeconds) override
 	{
 		positioner.update(deltaSeconds, mouseState_.pos, shouldHandleMouse() ? mouseState_.pressedLeft : false);
 	}
 
-	glm::mat4 getDefaultProjection() const {
+	glm::mat4 getDefaultProjection() const
+	{
 		const float ratio = ctx_.vkDev.framebufferWidth / (float)ctx_.vkDev.framebufferHeight;
 		return glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 	}

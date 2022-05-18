@@ -65,13 +65,26 @@ struct MeshFileHeader
 	/* According to your needs, you may add additional metadata fields */
 };
 
+// TODO: it seems that DrawData is the same as InstanceData at page 253
+/**
+ * \brief This structure represents an individual mesh instance in our 3D world
+ */
 struct DrawData
 {
+	// which mesh we want to render?
 	uint32_t meshIndex;
+
+	// which material to use? 
 	uint32_t materialIndex;
+
+	// which LOD level to use? 
 	uint32_t LOD;
+
+	// data offset
 	uint32_t indexOffset;
 	uint32_t vertexOffset;
+
+	// how to transform the mesh?
 	uint32_t transformIndex;
 };
 

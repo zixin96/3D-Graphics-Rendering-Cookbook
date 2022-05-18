@@ -25,7 +25,7 @@ struct MouseState
 	bool pressedLeft = false;
 } mouseState;
 
-CameraPositioner_FirstPerson positioner( vec3(-31.5f, 7.5f, -9.5f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+CameraPositioner_FirstPerson positioner(vec3(-31.5f, 7.5f, -9.5f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
 Camera camera(positioner);
 
 struct DrawElementsIndirectCommand
@@ -42,9 +42,9 @@ class GLMesh final
 public:
 	GLMesh(const MeshFileHeader& header, const Mesh* meshes, const uint32_t* indices, const float* vertexData)
 		: numIndices_(header.indexDataSize / sizeof(uint32_t))
-		, bufferIndices_(header.indexDataSize, indices, 0)
-		, bufferVertices_(header.vertexDataSize, vertexData, 0)
-		, bufferIndirect_(sizeof(DrawElementsIndirectCommand)* header.meshCount + sizeof(GLsizei), nullptr, GL_DYNAMIC_STORAGE_BIT)
+		  , bufferIndices_(header.indexDataSize, indices, 0)
+		  , bufferVertices_(header.vertexDataSize, vertexData, 0)
+		  , bufferIndirect_(sizeof(DrawElementsIndirectCommand) * header.meshCount + sizeof(GLsizei), nullptr, GL_DYNAMIC_STORAGE_BIT)
 	{
 		glCreateVertexArrays(1, &vao_);
 		glVertexArrayElementBuffer(vao_, bufferIndices_.getHandle());
@@ -96,7 +96,8 @@ public:
 		glBindVertexArray(vao_);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, bufferIndirect_.getHandle());
 		glBindBuffer(GL_PARAMETER_BUFFER, bufferIndirect_.getHandle());
-		glMultiDrawElementsIndirectCount(GL_TRIANGLES, GL_UNSIGNED_INT, (const void*)sizeof(GLsizei), 0, (GLsizei)header.meshCount, 0);
+		glMultiDrawElementsIndirectCount(GL_TRIANGLES, GL_UNSIGNED_INT, (const void*)sizeof(GLsizei), 0,
+		                                 (GLsizei)header.meshCount, 0);
 	}
 
 	~GLMesh()
@@ -134,7 +135,7 @@ int main(void)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 
-	GLShader shaderVertex  ("data/shaders/chapter05/GL03_mesh_inst.vert");
+	GLShader shaderVertex("data/shaders/chapter05/GL03_mesh_inst.vert");
 	GLShader shaderGeometry("data/shaders/chapter05/GL03_mesh_inst.geom");
 	GLShader shaderFragment("data/shaders/chapter05/GL03_mesh_inst.frag");
 	GLProgram program(shaderVertex, shaderGeometry, shaderFragment);
@@ -216,7 +217,7 @@ int main(void)
 		const mat4 p = glm::perspective(45.0f, ratio, 0.5f, 5000.0f);
 		const mat4 view = camera.getViewMatrix();
 
-		const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(camera.getPosition(), 1.0f) };
+		const PerFrameData perFrameData = {.view = view, .proj = p, .cameraPos = glm::vec4(camera.getPosition(), 1.0f)};
 		glNamedBufferSubData(perFrameDataBuffer.getHandle(), 0, kUniformBufferSize, &perFrameData);
 
 		glDisable(GL_DEPTH_TEST);

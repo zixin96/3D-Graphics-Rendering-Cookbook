@@ -154,14 +154,20 @@ inline VkPipelineShaderStageCreateInfo shaderStageInfo(VkShaderStageFlagBits sha
 
 VkShaderStageFlagBits glslangShaderStageToVulkan(glslang_stage_t sh);
 
-inline VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding, VkDescriptorType descriptorType,
+inline VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
+                                                               VkDescriptorType descriptorType,
                                                                VkShaderStageFlags stageFlags,
                                                                uint32_t descriptorCount = 1)
 {
 	return VkDescriptorSetLayoutBinding{
+		// the binding number of this entry and
+		// corresponds to a resource of the same binding number in the shader stages
 		.binding = binding,
+		// which type of resource descriptors are used for this binding?
 		.descriptorType = descriptorType,
+		// the number of descriptors contained in the binding, accessed in a shader as an array
 		.descriptorCount = descriptorCount,
+		// which pipeline shader stages can access a resource for this binding?
 		.stageFlags = stageFlags,
 		.pImmutableSamplers = nullptr
 	};

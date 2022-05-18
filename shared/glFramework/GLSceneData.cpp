@@ -18,11 +18,12 @@ GLSceneData::GLSceneData(
 	std::vector<std::string> textureFiles;
 	loadMaterials(materialFile, materials_, textureFiles);
 
-	for (const auto& f: textureFiles) {
+	for (const auto& f : textureFiles)
+	{
 		allMaterialTextures_.emplace_back(GL_TEXTURE_2D, f.c_str());
 	}
 
-	for (auto& mtl: materials_)
+	for (auto& mtl : materials_)
 	{
 		mtl.ambientOcclusionMap_ = getTextureHandleBindless(mtl.ambientOcclusionMap_, allMaterialTextures_);
 		mtl.emissiveMap_ = getTextureHandleBindless(mtl.emissiveMap_, allMaterialTextures_);
@@ -37,7 +38,7 @@ void GLSceneData::loadScene(const char* sceneFile)
 	::loadScene(sceneFile, scene_);
 
 	// prepare draw data buffer
-	for (const auto& c: scene_.meshes_)
+	for (const auto& c : scene_.meshes_)
 	{
 		auto material = scene_.materialForNode_.find(c.first);
 		if (material != scene_.materialForNode_.end())

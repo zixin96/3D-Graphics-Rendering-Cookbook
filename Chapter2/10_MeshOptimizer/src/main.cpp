@@ -13,8 +13,17 @@
 
 #include <vector>
 
+// Let's use MeshOptimizer to optimize the vertex and index buffer layouts of a mesh loaded
+// by the Assimp library. Then, we can generate a simplified model of the mesh
+
 using glm::mat4;
 using glm::vec3;
+
+/*
+This recipe uses a slightly different technique for the wireframe rendering. Instead of
+rendering a mesh twice, we use barycentric coordinates to identify the proximity of the
+triangle edge inside each triangle and change the color accordingly.
+ */
 
 static const char* shaderCodeVertex = R"(
 #version 460 core
@@ -31,6 +40,7 @@ void main()
 }
 )";
 
+//  the geometry shader is used generate barycentric coordinates for a triangular mesh
 static const char* shaderCodeGeometry = R"(
 #version 460 core
 
@@ -43,6 +53,7 @@ layout (location=1) out vec3 barycoords;
 
 void main()
 {
+	// store the values of the barycentric coordinates for each vertex of the triangle
 	const vec3 bc[3] = vec3[]
 	(
 		vec3(1.0, 0.0, 0.0),
@@ -65,13 +76,19 @@ static const char* shaderCodeFragment = R"(
 layout (location=0) in vec3 colors;
 layout (location=1) in vec3 barycoords;
 layout (location=0) out vec4 out_FragColor;
+
 float edgeFactor(float thickness)
 {
+	// The fwidth() function calculates the sum of the absolute values of the derivatives in
+	// the x and y screen coordinates and is used to determine the thickness of the lines. The
+	// smoothstep() function is used for antialiasing
 	vec3 a3 = smoothstep( vec3( 0.0 ), fwidth(barycoords) * thickness, barycoords);
 	return min( min( a3.x, a3.y ), a3.z );
 }
+
 void main()
 {
+	// Barycentric coordinates can be used inside the fragment shader to discriminate colors:
 	out_FragColor = vec4( mix( vec3(0.0), colors, edgeFactor(1.0) ), 1.0 );
 };
 )";
@@ -153,6 +170,7 @@ int main(void)
 	GLuint meshData;
 	glCreateBuffers(1, &meshData);
 
+	// load our mesh via Assimp, preserving the existing vertices and indices exactly as they were
 	const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
 
 	if (!scene || !scene->HasMeshes())
@@ -178,26 +196,82 @@ int main(void)
 
 	std::vector<unsigned int> indicesLod;
 	{
+		//  generate a remap table for our existing index data
 		std::vector<unsigned int> remap(indices.size());
-		const size_t vertexCount = meshopt_generateVertexRemap(remap.data(), indices.data(), indices.size(), positions.data(), indices.size(), sizeof(vec3));
 
+		// vertexCount value corresponds to the number of unique vertices
+		// that have remained after remapping
+		const size_t vertexCount = meshopt_generateVertexRemap(
+			remap.data(),
+			indices.data(),
+			indices.size(),
+			positions.data(),
+			indices.size(),
+			sizeof(vec3));
+
+		// allocate space for new vertex/index buffers 
 		std::vector<unsigned int> remappedIndices(indices.size());
 		std::vector<vec3> remappedVertices(vertexCount);
 
+		// generate new vertex and index buffers
 		meshopt_remapIndexBuffer(remappedIndices.data(), indices.data(), indices.size(), remap.data());
-		meshopt_remapVertexBuffer(remappedVertices.data(), positions.data(), positions.size(), sizeof(vec3), remap.data());
+		meshopt_remapVertexBuffer(remappedVertices.data(), positions.data(), positions.size(), sizeof(vec3),
+		                          remap.data());
 
+		/*
+			When we want to render a mesh, the GPU has to transform each vertex via a
+			vertex shader. GPUs can reuse transformed vertices by means of a small built-in
+			cache, usually storing between 16 and 32 vertices inside it. In order to use this
+			small cache effectively, we need to reorder the triangles to maximize the locality of
+			vertex references. How to do this with MeshOptimizer in place is shown next. Pay
+			attention to how only the indices data is being touched here
+		 */
 		meshopt_optimizeVertexCache(remappedIndices.data(), remappedIndices.data(), indices.size(), vertexCount);
-		meshopt_optimizeOverdraw(remappedIndices.data(), remappedIndices.data(), indices.size(), glm::value_ptr(remappedVertices[0]), vertexCount, sizeof(vec3), 1.05f);
-		meshopt_optimizeVertexFetch(remappedVertices.data(), remappedIndices.data(), indices.size(), remappedVertices.data(), vertexCount, sizeof(vec3));
 
-		const float threshold = 0.2f;
+		/*
+			Transformed vertices form triangles that are sent for rasterization to generate
+			fragments. Usually, each fragment is run through a depth test first, and fragments that
+			pass the depth test get the fragment shader executed to compute the final color. As
+			fragment shaders get more and more expensive, it becomes increasingly important to
+			reduce the number of fragment shader invocations. This can be achieved by reducing
+			pixel overdraw in a mesh, and, in general, it requires the use of view-dependent
+			algorithms. However, MeshOptimizer implements heuristics to reorder the triangles
+			and minimize overdraw from all directions. We can use it as follows
+		 */
+		meshopt_optimizeOverdraw(
+			remappedIndices.data(),
+			remappedIndices.data(),
+			indices.size(),
+			glm::value_ptr(remappedVertices[0]),
+			vertexCount,
+			sizeof(vec3),
+			// the threshold that determines how much the algorithm
+			// can compromise the vertex cache hit ratio.We use the recommended default value
+			// from the documentation
+			1.05f);
+
+		// optimize our indexand vertex buffers for vertex fetch efficiency
+		// This function will reorder vertices in the vertex buffer and regenerate indices to
+		// match the new contents of the vertex buffer
+		meshopt_optimizeVertexFetch(remappedVertices.data(), remappedIndices.data(), indices.size(),
+		                            remappedVertices.data(), vertexCount, sizeof(vec3));
+
+		// The last thing we will do in this recipe is simplify the mesh
+
+		// choose the default threshold and target error values
+		// Multiple LOD meshes can be generated this way by changing the threshold value
+		const float threshold = 0.05f;
 		const size_t target_index_count = size_t(remappedIndices.size() * threshold);
 		const float target_error = 1e-2f;
 
+		// generate a new index buffer (indicesLOD) that uses existing vertices from the vertex buffer with a
+		// reduced number of triangles. This new index buffer can be used to render Level-of-Detail (LOD) meshes
 		indicesLod.resize(remappedIndices.size());
-		indicesLod.resize(meshopt_simplify(&indicesLod[0], remappedIndices.data(), remappedIndices.size(), &remappedVertices[0].x, vertexCount, sizeof(vec3), target_index_count, target_error));
+		indicesLod.resize(meshopt_simplify(&indicesLod[0], remappedIndices.data(), remappedIndices.size(),
+		                                   &remappedVertices[0].x, vertexCount, sizeof(vec3), target_index_count,
+		                                   target_error));
 
+		//  copy the remapped data back into the original vectors as follows
 		indices = remappedIndices;
 		positions = remappedVertices;
 	}
@@ -206,12 +280,15 @@ int main(void)
 	const size_t sizeIndicesLod = sizeof(unsigned int) * indicesLod.size();
 	const size_t sizeVertices = sizeof(vec3) * positions.size();
 
+	// With modern OpenGL, we can store vertex and index data inside a single buffer: 
 	glNamedBufferStorage(meshData, sizeIndices + sizeIndicesLod + sizeVertices, nullptr, GL_DYNAMIC_STORAGE_BIT);
 	glNamedBufferSubData(meshData, 0, sizeIndices, indices.data());
 	glNamedBufferSubData(meshData, sizeIndices, sizeIndicesLod, indicesLod.data());
 	glNamedBufferSubData(meshData, sizeIndices + sizeIndicesLod, sizeVertices, positions.data());
 
+	// tell OpenGL where to read the vertex and index data from
 	glVertexArrayElementBuffer(vao, meshData);
+	// The starting offset to the vertex data is sizeIndices + sizeIndicesLod
 	glVertexArrayVertexBuffer(vao, 0, meshData, sizeIndices + sizeIndicesLod, sizeof(vec3));
 	glEnableVertexArrayAttrib(vao, 0);
 	glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
@@ -226,16 +303,26 @@ int main(void)
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		const mat4 m1 = glm::rotate(glm::translate(mat4(1.0f), vec3(-0.5f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
-		const mat4 m2 = glm::rotate(glm::translate(mat4(1.0f), vec3(+0.5f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 m1 = glm::rotate(glm::translate(mat4(1.0f), vec3(-0.5f, -0.5f, -1.5f)), (float)glfwGetTime(),
+		                            vec3(0.0f, 1.0f, 0.0f));
+		const mat4 m2 = glm::rotate(glm::translate(mat4(1.0f), vec3(+0.5f, -0.5f, -1.5f)), (float)glfwGetTime(),
+		                            vec3(0.0f, 1.0f, 0.0f));
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
-		const PerFrameData perFrameData1 = { .mvp = p * m1 };
+		const PerFrameData perFrameData1 = {.mvp = p * m1};
 		glNamedBufferSubData(perFrameDataBuffer, 0, kBufferSize, &perFrameData1);
-		glDrawElements(GL_TRIANGLES, static_cast<unsigned>(indices.size()), GL_UNSIGNED_INT, nullptr);
 
-		const PerFrameData perFrameData2 = { .mvp = p * m2 };
+		// render the optimized mesh
+		glDrawElements(
+			GL_TRIANGLES,
+			static_cast<unsigned>(indices.size()),
+			GL_UNSIGNED_INT,
+			// an offset to where its indices start in the index buffer
+			nullptr);
+
+		const PerFrameData perFrameData2 = {.mvp = p * m2};
 		glNamedBufferSubData(perFrameDataBuffer, 0, kBufferSize, &perFrameData2);
+		//  render the simplified LOD mesh
 		glDrawElements(GL_TRIANGLES, static_cast<unsigned>(indicesLod.size()), GL_UNSIGNED_INT, (void*)sizeIndices);
 
 		glfwSwapBuffers(window);

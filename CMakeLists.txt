@@ -154,6 +154,7 @@ add_subdirectory(Chapter2/10_MeshOptimizer)
 
 add_subdirectory(Chapter3/GL01_APIWrapping)
 add_subdirectory(Chapter3/GL02_VtxPulling)
+add_subdirectory(Chapter3/GL02_VtxIdxPulling)
 add_subdirectory(Chapter3/GL03_CubeMap)
 add_subdirectory(Chapter3/VK01_GLSLang)
 add_subdirectory(Chapter3/VK02_DemoApp)

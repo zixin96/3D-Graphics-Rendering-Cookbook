@@ -40,8 +40,8 @@ struct MouseState
 	bool pressedLeft = false;
 } mouseState;
 
-CameraPositioner_FirstPerson positioner( vec3(0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
-//positioner.setPosition(vec3(0.0f, 0.0f, 0.0f));
+CameraPositioner_FirstPerson positioner(vec3(0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+// positioner.setPosition(vec3(0.0f, 0.0f, 0.0f));
 Camera camera(positioner);
 
 int main(void)
@@ -114,7 +114,7 @@ int main(void)
 		const aiVector3D v = mesh->mVertices[i];
 		const aiVector3D n = mesh->mNormals[i];
 		const aiVector3D t = mesh->mTextureCoords[0][i];
-		vertices.push_back({ .pos = vec3(v.x, v.z, v.y), .n = vec3(n.x, n.y, n.z), .tc = vec2(t.x, t.y) });
+		vertices.push_back({.pos = vec3(v.x, v.z, v.y), .n = vec3(n.x, n.y, n.z), .tc = vec2(t.x, t.y)});
 	}
 	std::vector<unsigned int> indices;
 	for (unsigned i = 0; i != mesh->mNumFaces; i++)
@@ -193,7 +193,8 @@ int main(void)
 		for (unsigned i = 0; i != 6; ++i)
 		{
 			glTextureSubImage3D(cubemapTex, 0, 0, 0, i, cubemap.w_, cubemap.h_, 1, GL_RGB, GL_FLOAT, data);
-			data += cubemap.w_ * cubemap.h_ * cubemap.comp_ * Bitmap::getBytesPerComponent(cubemap.fmt_);
+			data += cubemap.w_ * cubemap.h_ * cubemap.comp_ * Bitmap::getBytesPerComponent(
+				cubemap.fmt_);
 		}
 		glBindTextures(1, 1, &cubemapTex);
 	}
@@ -265,19 +266,21 @@ int main(void)
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 		const mat4 view = camera.getViewMatrix();
 
-		const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(camera.getPosition(), 1.0f) };
+		const PerFrameData perFrameData = {.view = view, .proj = p, .cameraPos = glm::vec4(camera.getPosition(), 1.0f)};
 		glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
 
 		const mat4 Matrices[2]
 		{
-			glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f)),
+			glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(),
+			            vec3(0.0f, 1.0f, 0.0f)),
 			glm::scale(mat4(1.0f), vec3(10.0f))
 		};
 
 		glNamedBufferSubData(modelMatrices, 0, sizeof(mat4) * 2, &Matrices);
 
 		progModel.useProgram();
-		glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, static_cast<unsigned>(indices.size()), GL_UNSIGNED_INT, nullptr, 1, 0, 0);
+		glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, static_cast<unsigned>(indices.size()),
+		                                              GL_UNSIGNED_INT, nullptr, 1, 0, 0);
 
 		progCube.useProgram();
 		glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, 1, 1);

@@ -22,6 +22,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
+// let's learn how to convert equirectangular cube map representation into six faces
+// and load them into OpenGL
+
 using glm::mat4;
 using glm::vec2;
 using glm::vec3;
@@ -91,6 +94,8 @@ int main(void)
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	// you almost always want a seamless cubemap
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
 
@@ -162,37 +167,46 @@ int main(void)
 	}
 
 	// cube map
+	// TODO: investigate black box convertXXToXX
 	GLuint cubemapTex;
 	{
 		int w, h, comp;
+		// load HDR image using stbi_loadf
 		const float* img = stbi_loadf("data/piazza_bologni_1k.hdr", &w, &h, &comp, 3);
 		Bitmap in(w, h, comp, eBitmapFormat_Float, img);
 		Bitmap out = convertEquirectangularMapToVerticalCross(in);
 		stbi_image_free((void*)img);
 
+		// Convert an equirectangular map into a vertical cross and save the resulting image in
+		// a.hdr file for further inspection
 		stbi_write_hdr("screenshot.hdr", out.w_, out.h_, out.comp_, (const float*)out.data_.data());
 
+		// Convert the vertical cross into the actual cube map faces
 		Bitmap cubemap = convertVerticalCrossToCubeMapFaces(out);
 
+		// create OpenGL cube map texture
 		glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &cubemapTex);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_BASE_LEVEL, 0);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_MAX_LEVEL, 0);
-		glTextureParameteri(cubemapTex, GL_TEXTURE_MAX_LEVEL, 0);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(cubemapTex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTextureStorage2D(cubemapTex, 1, GL_RGB32F, cubemap.w_, cubemap.h_);
 		const uint8_t* data = cubemap.data_.data();
 
+		// upload individual cube map faces
 		for (unsigned i = 0; i != 6; ++i)
 		{
-			glTextureSubImage3D(cubemapTex, 0, 0, 0, i, cubemap.w_, cubemap.h_, 1, GL_RGB, GL_FLOAT, data);
+			glTextureSubImage3D(cubemapTex, 0, 0, 0,
+				// zoffset: used to specify the i index of the face
+				i,
+				cubemap.w_, cubemap.h_, 1, GL_RGB, GL_FLOAT, data);
 			data += cubemap.w_ * cubemap.h_ * cubemap.comp_ * Bitmap::getBytesPerComponent(cubemap.fmt_);
 		}
 		glBindTextures(1, 1, &cubemapTex);
-	}	
+	}
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -206,7 +220,8 @@ int main(void)
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
 		{
-			const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+			const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(),
+				vec3(0.0f, 1.0f, 0.0f));
 			const PerFrameData perFrameData = { .model = m, .mvp = p * m, .cameraPos = vec4(0.0f) };
 			glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
 			progModel.useProgram();

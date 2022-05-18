@@ -6,7 +6,7 @@
 #include <cstring>
 #include <chrono>
 
-#include "shared/Utils.h"
+#include "shared//Utils.h"
 #include "shared/UtilsVulkan.h"
 
 #include <glm/glm.hpp>
@@ -15,8 +15,8 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 
-const uint32_t kScreenWidth = 1280;
-const uint32_t kScreenHeight = 720;
+const uint32_t SCREEN_WIDTH = 1280;
+const uint32_t SCREEN_HEIGHT = 720;
 
 GLFWwindow* window;
 
@@ -30,8 +30,8 @@ static constexpr VkClearColorValue clearValueColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 size_t vertexBufferSize;
 size_t indexBufferSize;
 
-VulkanInstance vk;
-VulkanRenderDevice vkDev;
+VulkanInstance vulkanInstance;
+VulkanRenderDevice vulkanRenderDevice;
 
 struct VulkanState
 {
@@ -80,23 +80,26 @@ bool createDescriptorSet()
 		.pBindings = bindings.data()
 	};
 
-	VK_CHECK(vkCreateDescriptorSetLayout(vkDev.device, &layoutInfo, nullptr, &vkState.descriptorSetLayout));
+	VK_CHECK(
+		vkCreateDescriptorSetLayout(vulkanRenderDevice.device, &layoutInfo, nullptr, &vkState.descriptorSetLayout));
 
-	std::vector<VkDescriptorSetLayout> layouts(vkDev.swapchainImages.size(), vkState.descriptorSetLayout);
+	// allocate one descriptor set to each swap chain image
+	std::vector<VkDescriptorSetLayout> layouts(vulkanRenderDevice.swapchainImages.size(), vkState.descriptorSetLayout);
 
 	const VkDescriptorSetAllocateInfo allocInfo = {
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 		.pNext = nullptr,
 		.descriptorPool = vkState.descriptorPool,
-		.descriptorSetCount = static_cast<uint32_t>(vkDev.swapchainImages.size()),
+		.descriptorSetCount = static_cast<uint32_t>(vulkanRenderDevice.swapchainImages.size()),
 		.pSetLayouts = layouts.data()
 	};
 
-	vkState.descriptorSets.resize(vkDev.swapchainImages.size());
+	vkState.descriptorSets.resize(vulkanRenderDevice.swapchainImages.size());
 
-	VK_CHECK(vkAllocateDescriptorSets(vkDev.device, &allocInfo, vkState.descriptorSets.data()));
+	VK_CHECK(vkAllocateDescriptorSets(vulkanRenderDevice.device, &allocInfo, vkState.descriptorSets.data()));
 
-	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
+	// update descriptor sets with concrete buffer and texture handles (like texture/buffer binding in OpenGL)
+	for (size_t i = 0; i < vulkanRenderDevice.swapchainImages.size(); i++)
 	{
 		const VkDescriptorBufferInfo bufferInfo = {
 			.buffer = vkState.uniformBuffers[i],
@@ -120,7 +123,7 @@ bool createDescriptorSet()
 		};
 
 		const std::array<VkWriteDescriptorSet, 4> descriptorWrites = {
-			VkWriteDescriptorSet {
+			VkWriteDescriptorSet{
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet = vkState.descriptorSets[i],
 				.dstBinding = 0,
@@ -129,7 +132,7 @@ bool createDescriptorSet()
 				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.pBufferInfo = &bufferInfo
 			},
-			VkWriteDescriptorSet {
+			VkWriteDescriptorSet{
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet = vkState.descriptorSets[i],
 				.dstBinding = 1,
@@ -138,7 +141,7 @@ bool createDescriptorSet()
 				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 				.pBufferInfo = &bufferInfo2
 			},
-			VkWriteDescriptorSet {
+			VkWriteDescriptorSet{
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet = vkState.descriptorSets[i],
 				.dstBinding = 2,
@@ -147,7 +150,7 @@ bool createDescriptorSet()
 				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 				.pBufferInfo = &bufferInfo3
 			},
-			VkWriteDescriptorSet {
+			VkWriteDescriptorSet{
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet = vkState.descriptorSets[i],
 				.dstBinding = 3,
@@ -158,7 +161,11 @@ bool createDescriptorSet()
 			},
 		};
 
-		vkUpdateDescriptorSets(vkDev.device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(vulkanRenderDevice.device,
+			static_cast<uint32_t>(descriptorWrites.size()),
+			descriptorWrites.data(),
+			0,
+			nullptr);
 	}
 
 	return true;
@@ -166,6 +173,7 @@ bool createDescriptorSet()
 
 bool fillCommandBuffers(size_t i)
 {
+	// fill in a structure describing a command buffer
 	const VkCommandBufferBeginInfo bi =
 	{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -176,16 +184,16 @@ bool fillCommandBuffers(size_t i)
 
 	const std::array<VkClearValue, 2> clearValues =
 	{
-		VkClearValue { .color = clearValueColor },
-		VkClearValue { .depthStencil = { 1.0f, 0 } }
+		VkClearValue{.color = clearValueColor},
+		VkClearValue{.depthStencil = {1.0f, 0}}
 	};
 
 	const VkRect2D screenRect = {
-		.offset = { 0, 0 },
-		.extent = {.width = kScreenWidth, .height = kScreenHeight }
+		.offset = {0, 0},
+		.extent = {.width = SCREEN_WIDTH, .height = SCREEN_HEIGHT}
 	};
 
-	VK_CHECK(vkBeginCommandBuffer(vkDev.commandBuffers[i], &bi));
+	VK_CHECK(vkBeginCommandBuffer(vulkanRenderDevice.commandBuffers[i], &bi));
 
 	const VkRenderPassBeginInfo renderPassInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -197,16 +205,25 @@ bool fillCommandBuffers(size_t i)
 		.pClearValues = clearValues.data()
 	};
 
-	vkCmdBeginRenderPass(vkDev.commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(vulkanRenderDevice.commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(vkDev.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vkState.graphicsPipeline);
+	vkCmdBindPipeline(vulkanRenderDevice.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vkState.graphicsPipeline);
 
-	vkCmdBindDescriptorSets(vkDev.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vkState.pipelineLayout, 0, 1, &vkState.descriptorSets[i], 0, nullptr);
-	vkCmdDraw(vkDev.commandBuffers[i], static_cast<uint32_t>(indexBufferSize / (sizeof(unsigned int))), 1, 0, 0);
+	vkCmdBindDescriptorSets(vulkanRenderDevice.commandBuffers[i],
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		vkState.pipelineLayout,
+		0,
+		1,
+		&vkState.descriptorSets[i],
+		0,
+		nullptr);
 
-	vkCmdEndRenderPass(vkDev.commandBuffers[i]);
+	vkCmdDraw(vulkanRenderDevice.commandBuffers[i], static_cast<uint32_t>(indexBufferSize / (sizeof(unsigned int))), 1,
+		0, 0);
 
-	VK_CHECK(vkEndCommandBuffer(vkDev.commandBuffers[i]));
+	vkCmdEndRenderPass(vulkanRenderDevice.commandBuffers[i]);
+
+	VK_CHECK(vkEndCommandBuffer(vulkanRenderDevice.commandBuffers[i]));
 
 	return true;
 }
@@ -214,24 +231,27 @@ bool fillCommandBuffers(size_t i)
 void updateUniformBuffer(uint32_t currentImage, const void* uboData, size_t uboSize)
 {
 	void* data = nullptr;
-	vkMapMemory(vkDev.device, vkState.uniformBuffersMemory[currentImage], 0, uboSize, 0, &data);
-		memcpy(data, uboData, uboSize);
-	vkUnmapMemory(vkDev.device, vkState.uniformBuffersMemory[currentImage]);
+	vkMapMemory(vulkanRenderDevice.device, vkState.uniformBuffersMemory[currentImage], 0, uboSize, 0, &data);
+	memcpy(data, uboData, uboSize);
+	vkUnmapMemory(vulkanRenderDevice.device, vkState.uniformBuffersMemory[currentImage]);
 }
 
 bool createUniformBuffers()
 {
 	VkDeviceSize bufferSize = sizeof(UniformBuffer);
 
-	vkState.uniformBuffers.resize(vkDev.swapchainImages.size());
-	vkState.uniformBuffersMemory.resize(vkDev.swapchainImages.size());
+	vkState.uniformBuffers.resize(vulkanRenderDevice.swapchainImages.size());
+	vkState.uniformBuffersMemory.resize(vulkanRenderDevice.swapchainImages.size());
 
-	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
+	for (size_t i = 0; i < vulkanRenderDevice.swapchainImages.size(); i++)
 	{
-		if (!createBuffer(vkDev.device, vkDev.physicalDevice, bufferSize,
+		if (!createBuffer(vulkanRenderDevice.device,
+			vulkanRenderDevice.physicalDevice,
+			bufferSize,
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			vkState.uniformBuffers[i], vkState.uniformBuffersMemory[i]))
+			vkState.uniformBuffers[i],
+			vkState.uniformBuffersMemory[i]))
 		{
 			printf("Fail: buffers\n");
 			return false;
@@ -243,77 +263,119 @@ bool createUniformBuffers()
 
 bool initVulkan()
 {
-	createInstance(&vk.instance);
+	createInstance(&vulkanInstance.instance);
 
-	if (!setupDebugCallbacks(vk.instance, &vk.messenger, &vk.reportCallback))
+	if (!setupDebugCallbacks(vulkanInstance.instance, &vulkanInstance.messenger, &vulkanInstance.reportCallback))
 		exit(EXIT_FAILURE);
 
-	if (glfwCreateWindowSurface(vk.instance, window, nullptr, &vk.surface))
+	if (glfwCreateWindowSurface(vulkanInstance.instance, window, nullptr, &vulkanInstance.surface))
 		exit(EXIT_FAILURE);
 
-	if (!initVulkanRenderDevice(vk, vkDev, kScreenWidth, kScreenHeight, isDeviceSuitable, { .geometryShader = VK_TRUE }))
-		exit(EXIT_FAILURE);
 
-	if (!createTexturedVertexBuffer(vkDev, "data/rubber_duck/scene.gltf", &vkState.storageBuffer, &vkState.storageBufferMemory, &vertexBufferSize, &indexBufferSize) ||
+	if (!initVulkanRenderDevice(vulkanInstance,
+		vulkanRenderDevice,
+		SCREEN_WIDTH,
+		SCREEN_HEIGHT,
+		isDeviceSuitable,
+		{ .geometryShader = VK_TRUE }))
+	{
+		exit(EXIT_FAILURE);
+	}
+
+
+	if (!createTexturedVertexBuffer(vulkanRenderDevice,
+		"data/rubber_duck/scene.gltf",
+		&vkState.storageBuffer,
+		&vkState.storageBufferMemory,
+		&vertexBufferSize,
+		&indexBufferSize) ||
 		!createUniformBuffers())
 	{
-		printf("Cannot create data buffers\n"); fflush(stdout);
+		printf("Cannot create data buffers\n");
+		fflush(stdout);
 		exit(1);
 	}
 
-	createTextureImage(vkDev, "data/rubber_duck/textures/Duck_baseColor.png", vkState.texture.image, vkState.texture.imageMemory);
-	createImageView(vkDev.device, vkState.texture.image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, &vkState.texture.imageView);
-	createTextureSampler(vkDev.device, &vkState.textureSampler);
+	createTextureImage(vulkanRenderDevice,
+		"data/rubber_duck/textures/Duck_baseColor.png",
+		vkState.texture.image,
+		vkState.texture.imageMemory);
 
-	createDepthResources(vkDev, kScreenWidth, kScreenHeight, vkState.depthTexture);
+	createImageView(vulkanRenderDevice.device,
+		vkState.texture.image,
+		VK_FORMAT_R8G8B8A8_UNORM,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		&vkState.texture.imageView);
 
-	if (!createDescriptorPool(vkDev, 1, 2, 1, &vkState.descriptorPool) ||
+	createTextureSampler(vulkanRenderDevice.device, &vkState.textureSampler);
+
+	createDepthResources(vulkanRenderDevice, SCREEN_WIDTH, SCREEN_HEIGHT, vkState.depthTexture);
+
+	if (!createDescriptorPool(vulkanRenderDevice, 1, 2, 1, &vkState.descriptorPool) ||
 		!createDescriptorSet() ||
-		!createColorAndDepthRenderPass(vkDev, true, &vkState.renderPass, RenderPassCreateInfo{ .clearColor_ = true, .clearDepth_ = true, .flags_ = eRenderPassBit_First|eRenderPassBit_Last }) ||
-		!createPipelineLayout(vkDev.device, vkState.descriptorSetLayout, &vkState.pipelineLayout) ||
-		!createGraphicsPipeline(vkDev, vkState.renderPass, vkState.pipelineLayout, { "data/shaders/chapter03/VK02.vert", "data/shaders/chapter03/VK02.frag", "data/shaders/chapter03/VK02.geom" }, &vkState.graphicsPipeline))
+		!createColorAndDepthRenderPass(vulkanRenderDevice,
+			true,
+			&vkState.renderPass,
+			RenderPassCreateInfo{
+				.clearColor_ = true, .clearDepth_ = true,
+				.flags_ = eRenderPassBit_First | eRenderPassBit_Last
+			}) ||
+		!createPipelineLayout(vulkanRenderDevice.device, vkState.descriptorSetLayout, &vkState.pipelineLayout) ||
+		!createGraphicsPipeline(vulkanRenderDevice,
+			vkState.renderPass,
+			vkState.pipelineLayout,
+			{
+				"data/shaders/chapter03/VK02.vert",
+				"data/shaders/chapter03/VK02.frag",
+				"data/shaders/chapter03/VK02.geom"
+			},
+			&vkState.graphicsPipeline))
 	{
-		printf("Failed to create pipeline\n"); fflush(stdout);
+		printf("Failed to create pipeline\n");
+		fflush(stdout);
 		exit(0);
 	}
 
-	createColorAndDepthFramebuffers(vkDev, vkState.renderPass, vkState.depthTexture.imageView, vkState.swapchainFramebuffers);
+	createColorAndDepthFramebuffers(vulkanRenderDevice,
+		vkState.renderPass,
+		vkState.depthTexture.imageView,
+		vkState.swapchainFramebuffers);
 
 	return VK_SUCCESS;
 }
 
 void terminateVulkan()
 {
-	vkDestroyBuffer(vkDev.device, vkState.storageBuffer, nullptr);
-	vkFreeMemory(vkDev.device, vkState.storageBufferMemory, nullptr);
+	vkDestroyBuffer(vulkanRenderDevice.device, vkState.storageBuffer, nullptr);
+	vkFreeMemory(vulkanRenderDevice.device, vkState.storageBufferMemory, nullptr);
 
-	for (size_t i = 0; i < vkDev.swapchainImages.size(); i++)
+	for (size_t i = 0; i < vulkanRenderDevice.swapchainImages.size(); i++)
 	{
-		vkDestroyBuffer(vkDev.device, vkState.uniformBuffers[i], nullptr);
-		vkFreeMemory(vkDev.device, vkState.uniformBuffersMemory[i], nullptr);
+		vkDestroyBuffer(vulkanRenderDevice.device, vkState.uniformBuffers[i], nullptr);
+		vkFreeMemory(vulkanRenderDevice.device, vkState.uniformBuffersMemory[i], nullptr);
 	}
 
-	vkDestroyDescriptorSetLayout(vkDev.device, vkState.descriptorSetLayout, nullptr);
-	vkDestroyDescriptorPool(vkDev.device, vkState.descriptorPool, nullptr);
+	vkDestroyDescriptorSetLayout(vulkanRenderDevice.device, vkState.descriptorSetLayout, nullptr);
+	vkDestroyDescriptorPool(vulkanRenderDevice.device, vkState.descriptorPool, nullptr);
 
 	for (auto framebuffer : vkState.swapchainFramebuffers)
 	{
-		vkDestroyFramebuffer(vkDev.device, framebuffer, nullptr);
+		vkDestroyFramebuffer(vulkanRenderDevice.device, framebuffer, nullptr);
 	}
 
-	vkDestroySampler(vkDev.device, vkState.textureSampler, nullptr);
-	destroyVulkanImage(vkDev.device, vkState.texture);
+	vkDestroySampler(vulkanRenderDevice.device, vkState.textureSampler, nullptr);
+	destroyVulkanImage(vulkanRenderDevice.device, vkState.texture);
 
-	destroyVulkanImage(vkDev.device, vkState.depthTexture);
+	destroyVulkanImage(vulkanRenderDevice.device, vkState.depthTexture);
 
-	vkDestroyRenderPass(vkDev.device, vkState.renderPass, nullptr);
+	vkDestroyRenderPass(vulkanRenderDevice.device, vkState.renderPass, nullptr);
 
-	vkDestroyPipelineLayout(vkDev.device, vkState.pipelineLayout, nullptr);
-	vkDestroyPipeline(vkDev.device, vkState.graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(vulkanRenderDevice.device, vkState.pipelineLayout, nullptr);
+	vkDestroyPipeline(vulkanRenderDevice.device, vkState.graphicsPipeline, nullptr);
 
-	destroyVulkanRenderDevice(vkDev);
+	destroyVulkanRenderDevice(vulkanRenderDevice);
 
-	destroyVulkanInstance(vk);
+	destroyVulkanInstance(vulkanInstance);
 }
 
 /* Common main() and drawOverlay() routines for VK04, VK05 and VK06 samples */
@@ -321,10 +383,18 @@ void terminateVulkan()
 bool drawOverlay()
 {
 	uint32_t imageIndex = 0;
-	if (vkAcquireNextImageKHR(vkDev.device, vkDev.swapchain, 0, vkDev.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex) != VK_SUCCESS)
+	if (vkAcquireNextImageKHR(vulkanRenderDevice.device,
+		vulkanRenderDevice.swapchain,
+		0,
+		vulkanRenderDevice.imageAvailableSemaphore,
+		VK_NULL_HANDLE,
+		&imageIndex) != VK_SUCCESS)
+	{
 		return false;
+	}
 
-	VK_CHECK(vkResetCommandPool(vkDev.device, vkDev.commandPool, 0));
+
+	VK_CHECK(vkResetCommandPool(vulkanRenderDevice.device, vulkanRenderDevice.commandPool, 0));
 
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
@@ -332,7 +402,7 @@ bool drawOverlay()
 
 	const mat4 m1 = glm::rotate(
 		glm::translate(mat4(1.0f), vec3(0.f, 0.5f, -1.5f)) * glm::rotate(mat4(1.f), glm::pi<float>(),
-		vec3(1, 0, 0)),
+			vec3(1, 0, 0)),
 		(float)glfwGetTime(),
 		vec3(0.0f, 1.0f, 0.0f)
 	);
@@ -344,36 +414,37 @@ bool drawOverlay()
 
 	fillCommandBuffers(imageIndex);
 
-	const VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }; // or even VERTEX_SHADER_STAGE
+	const VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	// or even VERTEX_SHADER_STAGE
 
 	const VkSubmitInfo si =
 	{
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.imageAvailableSemaphore,
+		.pWaitSemaphores = &vulkanRenderDevice.imageAvailableSemaphore,
 		.pWaitDstStageMask = waitStages,
 		.commandBufferCount = 1,
-		.pCommandBuffers = &vkDev.commandBuffers[imageIndex],
+		.pCommandBuffers = &vulkanRenderDevice.commandBuffers[imageIndex],
 		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &vkDev.renderCompleteSemaphore
+		.pSignalSemaphores = &vulkanRenderDevice.renderCompleteSemaphore
 	};
 
-	VK_CHECK(vkQueueSubmit(vkDev.graphicsQueue, 1, &si, nullptr));
+	VK_CHECK(vkQueueSubmit(vulkanRenderDevice.graphicsQueue, 1, &si, nullptr));
 
 	const VkPresentInfoKHR pi =
 	{
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &vkDev.renderCompleteSemaphore,
+		.pWaitSemaphores = &vulkanRenderDevice.renderCompleteSemaphore,
 		.swapchainCount = 1,
-		.pSwapchains = &vkDev.swapchain,
+		.pSwapchains = &vulkanRenderDevice.swapchain,
 		.pImageIndices = &imageIndex
 	};
 
-	VK_CHECK(vkQueuePresentKHR(vkDev.graphicsQueue, &pi));
-	VK_CHECK(vkDeviceWaitIdle(vkDev.device));
+	VK_CHECK(vkQueuePresentKHR(vulkanRenderDevice.graphicsQueue, &pi));
+	VK_CHECK(vkDeviceWaitIdle(vulkanRenderDevice.device));
 
 	return true;
 }
@@ -393,7 +464,7 @@ int main()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "VulkanApp", nullptr, nullptr);
+	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "VulkanApp", nullptr, nullptr);
 	if (!window)
 	{
 		glfwTerminate();

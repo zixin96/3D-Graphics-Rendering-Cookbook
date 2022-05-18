@@ -12,6 +12,8 @@
 
 #include <vector>
 
+// let's render a wireframed 3D gltf model
+
 using glm::mat4;
 using glm::vec3;
 
@@ -47,144 +49,157 @@ struct PerFrameData
 	int isWireframe;
 };
 
-int main( void )
+int main(void)
 {
 	glfwSetErrorCallback(
-		[]( int error, const char* description )
+		[](int error, const char* description)
 		{
-			fprintf( stderr, "Error: %s\n", description );
+			fprintf(stderr, "Error: %s\n", description);
 		}
 	);
 
-	if ( !glfwInit() )
-		exit( EXIT_FAILURE );
+	if (!glfwInit())
+		exit(EXIT_FAILURE);
 
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 6 );
-	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow( 1024, 768, "Simple example", nullptr, nullptr );
-	if ( !window )
+	GLFWwindow* window = glfwCreateWindow(1024, 768, "Simple example", nullptr, nullptr);
+	if (!window)
 	{
 		glfwTerminate();
-		exit( EXIT_FAILURE );
+		exit(EXIT_FAILURE);
 	}
 
 	glfwSetKeyCallback(
 		window,
-		[]( GLFWwindow* window, int key, int scancode, int action, int mods )
+		[](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
-			if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS )
-				glfwSetWindowShouldClose( window, GLFW_TRUE );
+			if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+				glfwSetWindowShouldClose(window, GLFW_TRUE);
 		}
 	);
 
-	glfwMakeContextCurrent( window );
-	gladLoadGL( glfwGetProcAddress );
-	glfwSwapInterval( 1 );
+	glfwMakeContextCurrent(window);
+	gladLoadGL(glfwGetProcAddress);
+	glfwSwapInterval(1);
 
-	const GLuint shaderVertex = glCreateShader( GL_VERTEX_SHADER );
-	glShaderSource( shaderVertex, 1, &shaderCodeVertex, nullptr );
-	glCompileShader( shaderVertex );
+	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(shaderVertex, 1, &shaderCodeVertex, nullptr);
+	glCompileShader(shaderVertex);
 
-	const GLuint shaderFragment = glCreateShader( GL_FRAGMENT_SHADER );
-	glShaderSource( shaderFragment, 1, &shaderCodeFragment, nullptr );
-	glCompileShader( shaderFragment );
+	const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(shaderFragment, 1, &shaderCodeFragment, nullptr);
+	glCompileShader(shaderFragment);
 
 	const GLuint program = glCreateProgram();
-	glAttachShader( program, shaderVertex );
-	glAttachShader( program, shaderFragment );
-	glLinkProgram( program );
+	glAttachShader(program, shaderVertex);
+	glAttachShader(program, shaderFragment);
+	glLinkProgram(program);
 
 	GLuint vao;
-	glCreateVertexArrays( 1, &vao );
-	glBindVertexArray( vao );
+	glCreateVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
-	const GLsizeiptr kBufferSize = sizeof( PerFrameData );
+	const GLsizeiptr kBufferSize = sizeof(PerFrameData);
 
 	GLuint perFrameDataBuffer;
-	glCreateBuffers( 1, &perFrameDataBuffer );
-	glNamedBufferStorage( perFrameDataBuffer, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT );
-	glBindBufferRange( GL_UNIFORM_BUFFER, 0, perFrameDataBuffer, 0, kBufferSize );
+	glCreateBuffers(1, &perFrameDataBuffer);
+	glNamedBufferStorage(perFrameDataBuffer, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, perFrameDataBuffer, 0, kBufferSize);
 
-	glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_POLYGON_OFFSET_LINE );
-	glPolygonOffset( -1.0f, -1.0f );
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_POLYGON_OFFSET_LINE);
+	glPolygonOffset(-1.0f, -1.0f);
 
 	GLuint meshData;
-	glCreateBuffers( 1, &meshData );
+	glCreateBuffers(1, &meshData);
 
-	const aiScene* scene = aiImportFile( "data/rubber_duck/scene.gltf", aiProcess_Triangulate );
+	// we request the library to convert any geometric primitives it might encounter into triangles
+	const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
 
-	if ( !scene || !scene->HasMeshes() )
+	// basic error checking
+	if (!scene || !scene->HasMeshes())
 	{
-		printf( "Unable to load data/rubber_duck/scene.gltf\n" );
-		exit( 255 );
+		printf("Unable to load data/rubber_duck/scene.gltf\n");
+		exit(255);
 	}
 
+	// next, Now we can convert the loaded 3D scene into a data format that we can use to
+	// upload the model into OpenGL
+
 	const aiMesh* mesh = scene->mMeshes[0];
+	//  only use vertex positions in vec3 format without indices in this demo
 	std::vector<vec3> positions;
-	for ( unsigned int i = 0; i != mesh->mNumFaces; i++ )
+	for (unsigned int i = 0; i != mesh->mNumFaces; i++)
 	{
+		// flatten all of the indices and store only the vertex positions
 		const aiFace& face = mesh->mFaces[i];
-		const unsigned int idx[3] = { face.mIndices[0], face.mIndices[1], face.mIndices[2] };
-		for ( int j = 0; j != 3; j++ )
+		const unsigned int idx[3] = {face.mIndices[0], face.mIndices[1], face.mIndices[2]};
+		for (int j = 0; j != 3; j++)
 		{
 			const aiVector3D v = mesh->mVertices[idx[j]];
-			positions.push_back( vec3( v.x, v.z, v.y ) );
+			// Swap the y and z coordinates to orient the model
+			positions.push_back(vec3(v.x, v.z, v.y));
 		}
 	}
 
-	aiReleaseImport( scene );
+	//  deallocate the scene pointer
+	aiReleaseImport(scene);
 
-	glNamedBufferStorage( meshData, sizeof( vec3 ) * positions.size(), positions.data(), 0 );
+	// upload the content of positions[] into an OpenGL buffer
+	glNamedBufferStorage(meshData, sizeof(vec3) * positions.size(), positions.data(), 0);
 
-	glVertexArrayVertexBuffer( vao, 0, meshData, 0, sizeof( vec3 ) );
-	glEnableVertexArrayAttrib( vao, 0 );
-	glVertexArrayAttribFormat( vao, 0, 3, GL_FLOAT, GL_FALSE, 0 );
-	glVertexArrayAttribBinding( vao, 0, 0 );
+	// configure the vertex attribute
+	glVertexArrayVertexBuffer(vao, 0, meshData, 0, sizeof(vec3));
+	glEnableVertexArrayAttrib(vao, 0);
+	glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao, 0, 0);
 
+	// Save the number of vertices to be used by glDrawArrays()
 	const int numVertices = static_cast<int>(positions.size());
 
-	while ( !glfwWindowShouldClose( window ) )
+	while (!glfwWindowShouldClose(window))
 	{
 		int width, height;
-		glfwGetFramebufferSize( window, &width, &height );
+		glfwGetFramebufferSize(window, &width, &height);
 		const float ratio = width / (float)height;
 
-		glViewport( 0, 0, width, height );
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		glViewport(0, 0, width, height);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		const mat4 m = glm::rotate( glm::translate( mat4( 1.0f ), vec3( 0.0f, -0.5f, -1.5f ) ), (float)glfwGetTime(), vec3( 0.0f, 1.0f, 0.0f ) );
-		const mat4 p = glm::perspective( 45.0f, ratio, 0.1f, 1000.0f );
+		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(),
+		                           vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
-		PerFrameData perFrameData = { .mvp = p * m, .isWireframe = false };
+		PerFrameData perFrameData = {.mvp = p * m, .isWireframe = false};
 
-		glUseProgram( program );
-		glNamedBufferSubData( perFrameDataBuffer, 0, kBufferSize, &perFrameData );
+		glUseProgram(program);
+		glNamedBufferSubData(perFrameDataBuffer, 0, kBufferSize, &perFrameData);
 
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		glDrawArrays( GL_TRIANGLES, 0, numVertices );
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDrawArrays(GL_TRIANGLES, 0, numVertices);
 
 		perFrameData.isWireframe = true;
-		glNamedBufferSubData( perFrameDataBuffer, 0, kBufferSize, &perFrameData );
+		glNamedBufferSubData(perFrameDataBuffer, 0, kBufferSize, &perFrameData);
 
-		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		glDrawArrays( GL_TRIANGLES, 0, numVertices );
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLES, 0, numVertices);
 
-		glfwSwapBuffers( window );
+		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	glDeleteBuffers( 1, &meshData );
-	glDeleteBuffers( 1, &perFrameDataBuffer );
-	glDeleteProgram( program );
-	glDeleteShader( shaderFragment );
-	glDeleteShader( shaderVertex );
-	glDeleteVertexArrays( 1, &vao );
+	glDeleteBuffers(1, &meshData);
+	glDeleteBuffers(1, &perFrameDataBuffer);
+	glDeleteProgram(program);
+	glDeleteShader(shaderFragment);
+	glDeleteShader(shaderVertex);
+	glDeleteVertexArrays(1, &vao);
 
-	glfwDestroyWindow( window );
+	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	return 0;

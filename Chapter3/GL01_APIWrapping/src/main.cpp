@@ -15,6 +15,8 @@
 using glm::mat4;
 using glm::vec3;
 
+// let's intercept OpenGL API calls for debugging purposes
+
 static const char* shaderCodeVertex = R"(
 #version 460 core
 layout(std140, binding = 0) uniform PerFrameData
@@ -84,10 +86,15 @@ int main()
 
 	glfwMakeContextCurrent(window);
 
+	// Define a GL4API instance
 	GL4API api;
-
-	GetAPI4(&api, [](const char* func) -> void* { return (void *)glfwGetProcAddress(func); });
+	// fill it with OpenGL function pointers
+	// Use glfwGetProcAddress() to retrieve the pointers to OpenGL functions
+	GetAPI4(&api, [](const char* func) -> void* { return (void*)glfwGetProcAddress(func); });
+	// inject the wrapping code
 	InjectAPITracer4(&api);
+
+	// Invoke all subsequent OpenGL commands using the api. structure
 
 	const GLuint shaderVertex = api.glCreateShader(GL_VERTEX_SHADER);
 	api.glShaderSource(shaderVertex, 1, &shaderCodeVertex, nullptr);

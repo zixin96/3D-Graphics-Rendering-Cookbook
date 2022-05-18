@@ -12,6 +12,8 @@
 using glm::mat4;
 using glm::vec3;
 
+// Let's build a small application that integrates EasyProfiler and outputs a profiling report
+
 static const char* shaderCodeVertex = R"(
 #version 460 core
 layout(std140, binding = 0) uniform PerFrameData
@@ -82,6 +84,7 @@ struct PerFrameData
 
 int main(void)
 {
+	//  initialize EasyProfiler
 	EASY_MAIN_THREAD;
 	EASY_PROFILER_ENABLE;
 
@@ -119,6 +122,7 @@ int main(void)
 	gladLoadGL(glfwGetProcAddress);
 	glfwSwapInterval(1);
 
+	// you can manually mark up blocks of code to be reported by the profiler
 	EASY_BLOCK("Create resources");
 
 	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
@@ -147,17 +151,20 @@ int main(void)
 
 	EASY_END_BLOCK;
 
+	// you can put code inside blocks
 	{
 		EASY_BLOCK("Set state");
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-1.0f, -1.0f);
+
+		// the block will be automatically ended
 	}
 
 	while (!glfwWindowShouldClose(window))
 	{
-		EASY_BLOCK("MainLoop");
+		EASY_BLOCK("MainLoop", profiler::colors::Magenta);
 
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
@@ -166,15 +173,17 @@ int main(void)
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(),
+		                           vec3(1.0f, 1.0f, 1.0f));
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
-		PerFrameData perFrameData = { .mvp = p * m, .isWireframe = false };
+		PerFrameData perFrameData = {.mvp = p * m, .isWireframe = false};
 
 		glUseProgram(program);
 
 		{
 			EASY_BLOCK("Pass1");
+			//  simulate some heavy computations
 			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 			glNamedBufferSubData(perFrameDataBuffer, 0, kBufferSize, &perFrameData);
 
@@ -213,6 +222,7 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
+	// save the profiling data to a file
 	profiler::dumpBlocksToFile("profiler_dump.prof");
 
 	return 0;

@@ -19,7 +19,7 @@
 #include <vector>
 
 // Let's render the same duck, but using PVP pipelines (vertex pulling technique)
-// The idea is to allocate two buffer objects – one for the indices and another for the vertex data
+// The idea is to allocate two buffer objects â€“ one for the indices and another for the vertex data
 // and access them in GLSL shaders as shader storage buffers
 
 using glm::mat4;
@@ -70,7 +70,7 @@ int main(void)
 
 	initDebug();
 
-	GLShader shaderVertex("data/shaders/chapter03/GL02.vert");
+	GLShader shaderVertex("data/shaders/chapter03/GL02Index.vert");
 	GLShader shaderGeometry("data/shaders/chapter03/GL02.geom");
 	GLShader shaderFragment("data/shaders/chapter03/GL02.frag");
 	GLProgram program(shaderVertex, shaderGeometry, shaderFragment);
@@ -108,7 +108,7 @@ int main(void)
 	{
 		const aiVector3D v = mesh->mVertices[i];
 		const aiVector3D t = mesh->mTextureCoords[0][i];
-		vertices.push_back({ .pos = vec3(v.x, v.z, v.y), .uv = vec2(t.x, t.y) });
+		vertices.push_back({.pos = vec3(v.x, v.z, v.y), .uv = vec2(t.x, t.y)});
 	}
 
 	// TODO: ensure we can switch between 32 and 16 bit indices
@@ -127,6 +127,11 @@ int main(void)
 	GLuint dataIndices;
 	glCreateBuffers(1, &dataIndices);
 	glNamedBufferStorage(dataIndices, kSizeIndices, indices.data(), 0);
+	glBindBufferBase(
+		GL_SHADER_STORAGE_BUFFER,
+		// bind our vertex data shader storage buffer to binding point 2
+		2,
+		dataIndices);
 
 	// vertices
 	GLuint dataVertices;
@@ -135,15 +140,12 @@ int main(void)
 	glBindBufferBase(
 		GL_SHADER_STORAGE_BUFFER,
 		// bind our vertex data shader storage buffer to binding point 1
-		1,
+		1, 
 		dataVertices);
 
 	GLuint vao;
 	glCreateVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	// In this demo, we let OpenGL read indices from the VAO and use them to access vertex data in a shader storage buffer
-	// TODO: store indices inside a shader storage buffer and then read that data manually in the vertex shader
-	glVertexArrayElementBuffer(vao, dataIndices);
 
 	// texture
 	int w, h, comp;
@@ -171,13 +173,13 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(),
-			vec3(0.0f, 1.0f, 0.0f));
+		                           vec3(0.0f, 1.0f, 0.0f));
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
-		const PerFrameData perFrameData = { .mvp = p * m };
+		const PerFrameData perFrameData = {.mvp = p * m};
 		glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
-		glDrawElements(GL_TRIANGLES, static_cast<unsigned>(indices.size()), GL_UNSIGNED_INT, nullptr);
-
+		// Non-indexed draw is used, and gl_VertexID is used to manually read the VertexID from the index buffer
+		glDrawArrays(GL_TRIANGLES, 0, static_cast<unsigned>(indices.size()));
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

@@ -9,6 +9,8 @@
 #include "shared/Utils.h"
 #include "shared/UtilsVulkan.h"
 
+// in this demo, we will show you how to compile Vulkan shaders at runtime using glslang
+
 void saveSPIRVBinaryFile(const char* filename, unsigned int* code, size_t size)
 {
 	FILE* f = fopen(filename, "w");
